@@ -10,7 +10,7 @@
 
 Every major AI provider — Anthropic, OpenAI, Google — offers developer API access billed per token. This works for B2B software. It breaks completely for consumer mobile apps.
 
-A developer who builds a consumer app on Claude, GPT-4, or Gemini must pay all API costs themselves, for all users, with no mechanism to delegate those costs to the end user's own subscription. The result:
+A developer who builds a consumer app on Claude, GPT-5.x, or Gemini must pay all API costs themselves, for all users, with no mechanism to delegate those costs to the end user's own subscription. The result:
 
 - Developers absorb unlimited financial risk from viral growth
 - Hackers exploit exposed API keys for free usage
