@@ -4,4 +4,3 @@
 
 This document specifies the AI Billing Delegation Standard (ABDS), an OAuth-based delegation profile that lets users authorize bounded third-party consumption of provider-defined AI resource units, enforced by the AI provider through grant records, short-lived execution tokens, usage ledgers, revocation controls, and explicit economic consent.
 
-ABDS requires no new authentication infrastructure — it extends the proven OAuth 
