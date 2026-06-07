@@ -8,4 +8,4 @@
 
 ## 1. Executive Summary
 
-The AI Billing Delegation Standard (ABDS) addresses a critical economic
+The AI Billing Delegation Standard (ABDS) addresses a critical economic and architectural bottleneck in the consumer AI ecosystem: the resource provisioning friction point.
