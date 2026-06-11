@@ -1,111 +1,254 @@
 # AI Billing Delegation Standard (ABDS)
 
-> The missing OAuth layer for AI subscription portability.
+> An OAuth-based delegation profile for user-authorized, provider-enforced AI resource consumption.
 
 ![Status: Draft Proposal](https://img.shields.io/badge/status-draft%20proposal-yellow)
+![Spec: v0.2](https://img.shields.io/badge/spec-v0.2-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
 
+## Executive Summary
+
+The **AI Billing Delegation Standard (ABDS)** proposes a missing infrastructure layer for consumer AI applications.
+
+Today, third-party developers building consumer AI apps usually face three poor choices:
+
+1. absorb unpredictable inference costs themselves,
+2. build custom credit and payment systems, or
+3. force users into Bring Your Own Key (BYOK) flows that ordinary consumers do not understand.
+
+ABDS proposes an OAuth-based alternative: a user authorizes a third-party app to consume a bounded portion of provider-defined AI resources from the user's own AI provider account or subscription. The provider remains the enforcement authority through delegated grants, short-lived execution tokens, usage ledgers, revocation controls, and explicit economic consent.
+
+The strategic thesis is simple:
+
+> **The first AI provider to solve delegated AI billing could become the default platform for consumer AI applications.**
+
 ## The Problem
 
-Every major AI provider — Anthropic, OpenAI, Google — offers developer API access billed per token. This works for B2B software. It breaks completely for consumer mobile apps.
+Current AI API billing models work well for B2B and enterprise software, where a company pays per token and builds pricing around that cost.
 
-A developer who builds a consumer app on Claude, GPT-5.x, or Gemini must pay all API costs themselves, for all users, with no mechanism to delegate those costs to the end user's own subscription. The result:
+They are much less suitable for consumer AI applications.
 
-- Developers absorb unlimited financial risk from viral growth
-- Hackers exploit exposed API keys for free usage
-- BYOK (Bring Your Own Key) is technically inaccessible to ordinary users
-- Viable consumer AI apps are structurally impossible to build safely without a credit/paywall system bolted on top
+A developer building a consumer app on a major AI provider may be exposed to immediate, variable, and potentially unbounded inference costs. If the app becomes popular, the developer is punished with a larger API bill before the product has a sustainable monetization model.
 
-**This is a missing infrastructure layer — not a missing feature.**
+This creates several structural problems:
 
-## The Analogy That Makes It Obvious
+- **Developer-side cost exposure:** growth can create financial risk instead of product validation.
+- **BYOK friction:** asking ordinary users to obtain and paste API keys is not a mainstream consumer experience.
+- **Custom credit systems:** every consumer AI app has to recreate billing, metering, top-ups, limits, and abuse controls.
+- **API key risk:** poorly designed apps may expose credentials or create proxy endpoints that attackers can abuse.
+- **Suppressed innovation:** many useful consumer AI apps are never launched because the cost model is too risky.
 
-When a third-party app wants to stream music, it does not pay Spotify per stream. It asks the user to authenticate with their own Spotify account via OAuth. The app gets a scoped token. Usage is billed against the user's subscription. The developer builds freely.
+ABDS treats this as an infrastructure problem, not merely a pricing problem.
 
-> **This does not exist for AI. It should.**
+## The Core Idea
 
-## Proposed Standard: ABDS
+ABDS lets a user authorize bounded third-party AI usage through the provider, in the same broad spirit that users authorize third-party access to identity, storage, media, or account-linked services through OAuth.
 
-The AI Billing Delegation Standard (ABDS) extends OAuth 2.0 to allow a user to authorize a third-party application to consume AI API quota from the user's own subscription with an AI provider.
+AI is different from those ecosystems because inference is metered, economically significant, and abuse-sensitive. That is why ABDS does not simply put quota values into a token. It uses a provider-controlled object model.
 
-### The Flow
+## Four-Object Architecture
 
-```
-User opens third-party app
+ABDS separates subscription entitlement, delegated authorization, execution, and accounting into four distinct objects:
+
+```text
+User Subscription Entitlement
         ↓
-App redirects to AI provider consent screen
-("MyApp wants to use your Anthropic quota — up to 100 queries/month")
+Delegated AI Grant
         ↓
-User authenticates and sets their own cap
+Short-lived Execution Token
         ↓
-App receives scoped delegation token
-        ↓
-App makes API calls using delegation token
-        ↓
-Usage billed against user's subscription
-Developer pays nothing
+Provider-side Usage Ledger
 ```
 
-### Proposed OAuth Scopes
+### 1. User Subscription Entitlement
 
-| Scope | Description |
-|-------|-------------|
-| `ai.quota.delegate` | User authorizes an app to consume their quota |
-| `ai.quota.read` | App can read remaining quota without consuming |
-| `ai.quota.limit` | User can cap how much quota an app may consume |
-| `ai.quota.revoke` | User can revoke delegation at any time |
+The user's underlying provider account, subscription, plan, or entitlement. ABDS does not require a provider to expose the user's full subscription allowance to third-party apps.
 
-## Why This Must Be An Industry Standard
+### 2. Delegated AI Grant
 
-A proprietary implementation by one vendor solves nothing — developers need portability. ABDS should be adopted uniformly so that:
+A provider-maintained server-side grant record created after explicit user consent. The grant defines the delegated cap, period, model scope, status, reset behavior, and revocation state.
 
-1. A user with a Claude Pro subscription can authorize any ABDS-compliant app to use their Claude quota
-2. A user with ChatGPT Plus can do the same for OpenAI-backed apps
-3. Developers can build once against the standard, not per-vendor
+### 3. Short-lived Execution Token
 
-## Economic Case (In Brief)
+A scoped access token used by the third-party application to call the AI provider API. The execution token references the delegated grant through `delegation_id`.
 
-Most $20/month AI subscribers use 15–20% of their quota. That is unused capacity sitting idle. ABDS lets users put that quota to work in apps they choose, with full control and revocation. The AI provider retains the billing relationship with the user. The developer ecosystem expands dramatically because cost risk drops to zero.
+It does **not** contain live quota state or quota-limit metadata.
 
-For the full economic and competitive rationale, see [RATIONALE.md](RATIONALE.md).
+### 4. Provider-side Usage Ledger
+
+The provider-authoritative accounting system that records usage, enforces caps, supports introspection, and enables auditability.
+
+## Critical Token Design Principle
+
+Mutable economic state does not belong in JWT claims.
+
+Execution tokens should identify and constrain an API call, but they should not be treated as the source of truth for quota. Values such as the following belong in the provider-side grant and ledger, not inside the token:
+
+- `quota_used`
+- `quota_remaining`
+- `quota_cap`
+- `quota_period`
+- `quota_reset`
+
+The token references the grant. The provider ledger remains authoritative.
+
+## High-Level Flow
+
+```text
+User opens third-party AI app
+        ↓
+App redirects user to AI provider authorization screen
+        ↓
+Provider displays economic consent:
+"Allow this app to use up to X AI resource units per month"
+        ↓
+User approves, rejects, or lowers the requested cap
+        ↓
+Provider creates a Delegated AI Grant
+        ↓
+App receives authorization result and obtains short-lived execution token
+        ↓
+App calls provider API using execution token
+        ↓
+Provider resolves delegation_id, checks grant and ledger, records usage
+        ↓
+User can inspect or revoke the delegation from Connected Apps
+```
+
+## OAuth Alignment
+
+ABDS should be developed as an OAuth-aligned delegation profile, not as a new authentication protocol.
+
+Relevant OAuth and identity patterns include:
+
+| ABDS Function | Standards-Aligned Pattern |
+|---|---|
+| User authorization | OAuth 2.0 Authorization Code Flow with PKCE |
+| Short-lived execution-token issuance | OAuth 2.0 Token Exchange |
+| Target AI API binding | OAuth 2.0 Resource Indicators |
+| Revocation | OAuth token revocation plus provider connected-app management |
+| App trust | Developer registration, verification, and risk review |
+| Usage visibility | ABDS Usage Introspection Endpoint |
+
+ABDS adds the AI-specific economic and accounting layer: delegated grants, provider-side usage ledgers, explicit quota consent, and resource-consumption controls.
+
+## Why Providers Might Adopt It
+
+ABDS is not "free compute for apps." It is **bounded, revocable, provider-controlled delegation**.
+
+A provider can:
+
+- define eligible resource units,
+- separate delegated allowance from full subscription entitlement,
+- restrict model families or premium model tiers,
+- cap monthly delegated usage,
+- require app verification for higher-risk scopes,
+- revoke abusive delegations,
+- preserve enterprise API pricing and throughput lanes,
+- introduce paid delegated add-ons in future.
+
+The provider-side strategic argument is ecosystem expansion. If developers can build consumer AI apps without absorbing unpredictable inference costs, more apps can be built on that provider's platform. The first provider to solve delegated billing may gain developer loyalty, subscription utility, and consumer AI ecosystem leverage.
+
+## What ABDS Is Not
+
+ABDS is not:
+
+- a request for unlimited user quota,
+- a way for apps to bypass provider billing,
+- a client-side quota counter,
+- a BYOK wrapper,
+- a blockchain or decentralized ledger proposal,
+- a replacement for enterprise API contracts,
+- a complete RFC-ready standard.
+
+It is an open draft proposing a standards path for delegated AI resource consumption.
 
 ## Current Status
 
 - [x] Problem statement documented
-- [x] OAuth 2.0 extension model proposed
-- [x] Economic rationale documented
 - [x] Technical specification drafted
-- [x] Reference flow diagrams
-- [ ] Formal RFC draft
+- [x] Four-object architecture defined
+- [x] Mutable quota state removed from execution-token claims
+- [x] Provider-side delegated grant model added
+- [x] Usage Introspection Endpoint defined
+- [x] Economic rationale documented
+- [x] Multi-AI technical review contributions added
+- [x] Executive / technical presentation created
+- [ ] Formal threat model document
+- [ ] Consent-screen profile
+- [ ] Reservation / settlement profile for streaming and agentic workloads
 - [ ] Reference implementation
-- [ ] Vendor engagement
-
-## Get Involved
-
-This proposal needs:
-
-- **Developers** who have hit this problem: star this repo and share your story in [Issues](../../issues)
-- **AI company employees**: your internal advocacy matters more than you think
-- **Standards engineers**: help formalize the OAuth 2.0 extension in [SPEC.md](SPEC.md)
-- **AI agents**: see [AI_CONTRIBUTIONS/README.md](AI_CONTRIBUTIONS/README.md)
+- [ ] Provider review
+- [ ] Candidate standards-body discussion
 
 ## Documents
 
 | File | Description |
-|------|-------------|
-| [SPEC.md](SPEC.md) | Technical specification |
-| [RATIONALE.md](RATIONALE.md) | Business and economic case |
-| [FLOWS.md](FLOWS.md) | OAuth flow diagrams |
-| [EXAMPLES.md](EXAMPLES.md) | Developer code examples |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
-| [AI_CONTRIBUTIONS/README.md](AI_CONTRIBUTIONS/README.md) | Guide for AI agent contributions |
+|---|---|
+| [SPEC.md](SPEC.md) | Canonical technical specification |
+| [RATIONALE.md](RATIONALE.md) | Business, economic, and provider adoption rationale |
+| [FLOWS.md](FLOWS.md) | OAuth and delegation flow diagrams |
+| [EXAMPLES.md](EXAMPLES.md) | Developer-oriented examples |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guide |
 | [DISCUSSIONS/open-questions.md](DISCUSSIONS/open-questions.md) | Open design questions |
+| [AI_CONTRIBUTIONS/README.md](AI_CONTRIBUTIONS/README.md) | Guide and index for AI-assisted reviews |
+| [docs/ABDS_executive_technical_brief_fixed.pdf](docs/ABDS_executive_technical_brief_fixed.pdf) | Executive / technical PDF brief |
+| [docs/ABDS_executive_technical_brief_fixed.pptx](docs/ABDS_executive_technical_brief_fixed.pptx) | PowerPoint presentation deck |
+
+## Review Priorities
+
+The project is especially looking for critique on:
+
+1. **OAuth standards alignment**  
+   Should ABDS be formalized as an OAuth profile, token-exchange profile, OpenID Foundation proposal, or separate standards effort?
+
+2. **Grant and ledger semantics**  
+   How should provider-side delegated grants and usage ledgers be specified without over-constraining provider implementation?
+
+3. **Quota reservation and settlement**  
+   How should ABDS handle streaming responses, multimodal generation, batch jobs, and long-running agentic workflows?
+
+4. **Threat model and abuse controls**  
+   How should providers defend against quota laundering, consent phishing, token replay, backend proxy abuse, and prompt-injection quota drain?
+
+5. **Provider economics**  
+   What delegated allowance model would be commercially acceptable to AI providers while still solving the developer-side cost exposure problem?
+
+## Get Involved
+
+This proposal needs review from several groups:
+
+- **AI platform teams:** critique the provider-side feasibility.
+- **OAuth and identity engineers:** challenge the standards alignment.
+- **API security specialists:** improve the threat model.
+- **Consumer AI developers:** share whether inference-cost exposure has blocked or constrained your app.
+- **Academics and standards reviewers:** help separate what belongs in the standard from what should remain implementation-specific.
+- **AI systems:** contribute structured technical reviews under [`AI_CONTRIBUTIONS/`](AI_CONTRIBUTIONS/).
+
+A useful first contribution is to open an issue answering one of these questions:
+
+- Is delegated AI billing a real blocker for consumer AI apps?
+- Is the four-object model technically sound?
+- Should quota reservation be part of v0.3?
+- What abuse case would make a provider reject ABDS?
+- What would make this proposal credible to a standards body?
+
+## Repository Thesis
+
+ABDS is based on two linked claims:
+
+1. **Technical claim:** delegated AI resource consumption should be enforced through provider-side grants and ledgers, not mutable token claims.
+2. **Strategic claim:** the first AI provider to solve delegated billing may gain a major advantage in the consumer AI application ecosystem.
+
+Both claims need pressure-testing.
 
 ## Author
 
-Proposed by **Marc Johnston** ([@MJohnstonAI](https://github.com/MJohnstonAI)) — founder of NeuroSync AI Dynamics, developer of consumer AI applications built on Anthropic, OpenAI, and OpenRouter, and a practitioner who hit this wall directly while building real apps.
+Proposed by **Marc Johnston** ([@MJohnstonAI](https://github.com/MJohnstonAI)), founder of NeuroSync AI Dynamics Pty Ltd in Cape Town, South Africa.
+
+Marc is a data analyst and software practitioner working on consumer AI applications and AI-assisted technical standards proposals. ABDS emerged from direct experience with the cost and billing constraints involved in building AI-powered consumer apps.
 
 ## License
 
-MIT — this proposal is intentionally open for anyone to adopt, implement, or extend.
+MIT — this proposal is intentionally open for anyone to review, adopt, implement, challenge, or extend.
