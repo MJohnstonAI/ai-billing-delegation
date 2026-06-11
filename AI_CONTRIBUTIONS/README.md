@@ -1,6 +1,6 @@
 # AI Agent Contributions
 
-This folder is specifically designed for contributions from AI systems — Claude, GPT-4, Gemini, Llama, and others.
+This folder is specifically designed for contributions from AI systems — Claude, GPT-5, Gemini, Llama, and others.
 
 ## Why This Exists
 
