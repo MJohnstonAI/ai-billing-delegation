@@ -3,7 +3,7 @@
 > An OAuth-based delegation profile for user-authorized, provider-enforced AI resource consumption.
 
 ![Status: Draft Proposal](https://img.shields.io/badge/status-draft%20proposal-yellow)
-![Spec: v0.2](https://img.shields.io/badge/spec-v0.2-blue)
+![Spec: v0.3](https://img.shields.io/badge/spec-v0.3-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
 
@@ -175,7 +175,10 @@ It is an open draft proposing a standards path for delegated AI resource consump
 - [x] Economic rationale documented
 - [x] Multi-AI technical review contributions added
 - [x] Executive / technical presentation created
-- [ ] Formal threat model document
+- [x] Formal threat model document
+- [x] Provider discovery proposal
+- [x] Implementation profiles
+- [x] Public roadmap
 - [ ] Consent-screen profile
 - [ ] Reservation / settlement profile for streaming and agentic workloads
 - [ ] Reference implementation
@@ -186,7 +189,11 @@ It is an open draft proposing a standards path for delegated AI resource consump
 
 | File | Description |
 |---|---|
-| [SPEC.md](SPEC.md) | Canonical technical specification |
+| [SPEC.md](SPEC.md) | Canonical v0.3 technical specification |
+| [ROADMAP.md](ROADMAP.md) | Version roadmap from v0.2 through candidate standards submission |
+| [DISCOVERY.md](DISCOVERY.md) | Provider discovery metadata proposal |
+| [IMPLEMENTATION_PROFILES.md](IMPLEMENTATION_PROFILES.md) | Basic, Standard, and Advanced / Enterprise implementation profiles |
+| [THREAT_MODEL.md](THREAT_MODEL.md) | Threat model and abuse-control matrix |
 | [RATIONALE.md](RATIONALE.md) | Business, economic, and provider adoption rationale |
 | [FLOWS.md](FLOWS.md) | OAuth and delegation flow diagrams |
 | [EXAMPLES.md](EXAMPLES.md) | Developer-oriented examples |
@@ -230,7 +237,7 @@ A useful first contribution is to open an issue answering one of these questions
 
 - Is delegated AI billing a real blocker for consumer AI apps?
 - Is the four-object model technically sound?
-- Should quota reservation be part of v0.3?
+- Should quota reservation be part of v0.4?
 - What abuse case would make a provider reject ABDS?
 - What would make this proposal credible to a standards body?
 
