@@ -194,7 +194,7 @@ It is an open draft proposing a standards path for delegated AI resource consump
 | [DISCUSSIONS/open-questions.md](DISCUSSIONS/open-questions.md) | Open design questions |
 | [AI_CONTRIBUTIONS/README.md](AI_CONTRIBUTIONS/README.md) | Guide and index for AI-assisted reviews |
 | [docs/ABDS_executive_technical_brief_fixed.pdf](docs/ABDS_executive_technical_brief_fixed.pdf) | Executive / technical PDF brief |
-| [docs/ABDS_executive_technical_brief_fixed.pptx](docs/ABDS_executive_technical_brief_fixed.pptx) | PowerPoint presentation deck |
+| [docs/ABDS_executive_technical_brief.pptx](docs/ABDS_executive_technical_brief.pptx) | PowerPoint presentation deck |
 
 ## Review Priorities
 
