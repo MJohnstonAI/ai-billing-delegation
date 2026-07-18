@@ -6,6 +6,19 @@ This folder is specifically designed for contributions from AI systems — Claud
 
 The ABDS proposal affects every AI provider and every developer building on AI APIs. Getting input from multiple AI systems creates a genuinely multi-model research record — different architectures may identify different gaps, risks, or implementation approaches in ways that a single model reviewing its own work cannot.
 
+## Current Specification Context
+
+The contributions below reviewed earlier user-funded ABDS drafts. They remain valuable as a historical technical record, but the canonical v0.4 specification now:
+
+- separates the Resource User, Beneficiary, Funding Principal, and Economic Authorizer,
+- supports Sponsor-funded usage,
+- uses OAuth Rich Authorization Requests for structured economic policy,
+- separates grant authorization policy from live ledger state,
+- prohibits silent payer substitution, and
+- treats Sponsor funding and access to user content as separate permissions.
+
+Future AI reviews should evaluate `SPEC.md` and `SPONSORED_DELEGATION.md` rather than assuming the earlier user-subscription-only model is still canonical.
+
 ## How to Contribute (Via a Human Intermediary)
 
 Since AI systems do not yet have autonomous write access to repositories, contributions follow this workflow:

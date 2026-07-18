@@ -1,185 +1,274 @@
-# ABDS Developer Examples
+# ABDS Illustrative Examples
 
-## Initiating the Authorization Flow (JavaScript)
+> These examples describe a proposed protocol. All domains, endpoints, identifiers, models, tokens, units, and funding offers are fictional. They are not evidence that any AI Provider currently implements ABDS.
+
+## 1. User-Funded Authorization Details
+
+```json
+[
+  {
+    "type": "abds_ai_delegation",
+    "actions": ["ai.execute", "ai.usage.read"],
+    "locations": ["https://api.provider.example"],
+    "models": ["economy-text"],
+    "budget": {
+      "max_units": 100,
+      "unit_type": "provider_ai_unit",
+      "period": "monthly",
+      "per_request_max_units": 5,
+      "overage": "prohibited"
+    }
+  }
+]
+```
+
+The Resource User is also the Funding Principal.
+
+## 2. Sponsor-Funded NatureGuard Authorization Details
+
+```json
+[
+  {
+    "type": "abds_ai_delegation",
+    "actions": ["ai.execute", "ai.usage.read"],
+    "locations": ["https://api.provider.example"],
+    "models": ["economy-text", "economy-vision"],
+    "budget": {
+      "max_units": 100,
+      "unit_type": "provider_ai_unit",
+      "period": "monthly",
+      "per_request_max_units": 5,
+      "overage": "prohibited"
+    },
+    "funding_offer_id": "offer_natureguard_public_2026"
+  }
+]
+```
+
+The Authorization Server resolves the offer, verifies that NatureGuard is eligible, validates the Beneficiary, and displays the Sponsor terms.
+
+The Client cannot choose a raw Sponsor account or `funding_source_id`.
+
+## 3. Authorization Request Construction
 
 ```javascript
-function initiateABDSAuth(provider = 'anthropic') {
+async function startABDSAuthorization({
+  authorizationEndpoint,
+  clientId,
+  redirectUri,
+  authorizationDetails,
+  state,
+  codeChallenge
+}) {
   const params = new URLSearchParams({
-    response_type: 'code',
-    client_id: process.env.ANTHROPIC_APP_CLIENT_ID,
-    redirect_uri: 'https://yourapp.com/auth/callback',
-    scope: 'ai.quota.delegate ai.quota.read',
-    quota_cap: '100',
-    quota_period: 'monthly',
-    model_scope: 'claude-3-haiku-20240307',
-    state: generateCSRFToken()
+    response_type: "code",
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    state,
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
+    authorization_details: JSON.stringify(authorizationDetails)
   });
 
-  window.location.href = `https://auth.anthropic.com/oauth/authorize?${params}`;
+  window.location.assign(`${authorizationEndpoint}?${params}`);
 }
 ```
 
-## Handling the Callback (Next.js API Route)
+Production Clients must:
 
-```javascript
-// app/api/auth/callback/route.js
-export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const code = searchParams.get('code');
-  const state = searchParams.get('state');
+- obtain endpoints and supported capabilities through Provider discovery,
+- generate and verify `state`,
+- generate a fresh PKCE verifier and `S256` challenge,
+- use an exact registered redirect URI,
+- reject unknown issuers in multi-Provider flows, and
+- use Pushed Authorization Requests when required.
 
-  // Verify CSRF state
-  if (!verifyCSRFToken(state)) {
-    return Response.json({ error: 'Invalid state' }, { status: 400 });
-  }
+## 4. Provider-side Grant
 
-  // Exchange code for delegation token
-  const tokenResponse = await fetch('https://auth.anthropic.com/oauth/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      grant_type: 'authorization_code',
-      code,
-      client_id: process.env.ANTHROPIC_APP_CLIENT_ID,
-      client_secret: process.env.ANTHROPIC_APP_CLIENT_SECRET,
-      redirect_uri: 'https://yourapp.com/auth/callback'
-    })
-  });
-
-  const { access_token, expires_in } = await tokenResponse.json();
-
-  // Store token server-side against user session
-  await db.users.update({
-    where: { id: session.userId },
-    data: { 
-      anthropic_delegation_token: access_token,
-      anthropic_token_expires: new Date(Date.now() + expires_in * 1000)
-    }
-  });
-
-  return Response.redirect('/app');
+```json
+{
+  "delegation_id": "del_natureguard_abc123",
+  "beneficiary_subject": "usr_948201842",
+  "app_client_id": "app_natureguard",
+  "funding_source_type": "sponsor_budget",
+  "funding_source_id": "internal_funding_source_391",
+  "economic_authorizer_type": "sponsor_policy",
+  "sponsorship_program_id": "program_green_earth_2026",
+  "unit_type": "provider_ai_unit",
+  "quota_cap": 100,
+  "quota_period": "monthly",
+  "per_request_cap": 5,
+  "model_scope": ["economy-text", "economy-vision"],
+  "operation_scope": ["ai.execute", "ai.usage.read"],
+  "overage_policy": "prohibited",
+  "status": "active",
+  "created_at": "2026-07-18T10:00:00Z",
+  "expires_at": "2026-12-31T23:59:59Z"
 }
 ```
 
-## Making API Calls with Delegation Token (Backend)
+`funding_source_id` is provider-internal and must not be copied into the Execution Token.
+
+## 5. Execution Token
+
+```json
+{
+  "iss": "https://auth.provider.example",
+  "sub": "usr_948201842",
+  "aud": "https://api.provider.example",
+  "iat": 1784368800,
+  "exp": 1784369700,
+  "jti": "tok_xyz789",
+  "client_id": "app_natureguard",
+  "delegation_id": "del_natureguard_abc123",
+  "scope": "ai.execute ai.usage.read",
+  "model_scope": ["economy-text", "economy-vision"],
+  "abds_version": "0.4"
+}
+```
+
+The token does not contain live quota, Sponsor balance, funding-source identifier, or settlement state.
+
+## 6. Backend-Mediated AI Call
 
 ```javascript
-// Never expose the delegation token to the client
-// All AI calls go through your backend
-
-async function callAI(userId, userMessage) {
-  const user = await db.users.findUnique({ where: { id: userId } });
-  
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
+async function callProvider({ executionToken, request }) {
+  const response = await fetch("https://api.provider.example/v1/inference", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      // Use delegation token instead of your own API key
-      'Authorization': `Bearer ${user.anthropic_delegation_token}`
+      "Authorization": `Bearer ${executionToken}`,
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: userMessage }]
-    })
+    body: JSON.stringify(request)
   });
 
-  // Handle quota exhaustion
-  if (response.status === 429) {
-    const isQuotaExceeded = response.headers.get('X-ABDS-Quota-Exceeded');
-    if (isQuotaExceeded) {
-      throw new Error('ABDS_QUOTA_EXCEEDED');
-    }
+  const result = await response.json();
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      error: result.error,
+      recovery: result.recovery
+    };
   }
 
-  return response.json();
+  return { ok: true, result };
 }
 ```
 
-## Checking Quota Before Calling (React Native)
+The browser or mobile UI should call the Client's authenticated backend. Sensitive provider refresh and execution credentials should remain server-side.
+
+## 7. Grant-specific Usage Status
+
+```http
+GET /v1/abds/delegations/del_natureguard_abc123/usage
+Authorization: Bearer {short_lived_execution_token}
+```
+
+```json
+{
+  "delegation_id": "del_natureguard_abc123",
+  "unit_type": "provider_ai_unit",
+  "quota_cap": 100,
+  "quota_used": 47,
+  "quota_remaining": 53,
+  "quota_period": "monthly",
+  "quota_reset": "2026-08-01T00:00:00Z",
+  "status": "active",
+  "funding_display": {
+    "type": "sponsor_budget",
+    "name": "Green Earth Foundation"
+  }
+}
+```
+
+The Client sees only its grant-specific state. It does not receive the Sponsor's full pool balance or other Beneficiaries' activity.
+
+## 8. Sponsor Aggregate Report
+
+```json
+{
+  "sponsorship_program_id": "program_green_earth_2026",
+  "reporting_period": {
+    "starts_at": "2026-07-01T00:00:00Z",
+    "ends_at": "2026-08-01T00:00:00Z"
+  },
+  "aggregate_usage": {
+    "active_beneficiaries": 842,
+    "total_units_used": 28610,
+    "grants_created": 915,
+    "grants_revoked": 31,
+    "requests_denied_for_cap": 74
+  },
+  "content_visibility": "none",
+  "identity_visibility": "aggregate_only"
+}
+```
+
+Prompt, output, file, conversation, and identity access require separate authorization and are not implied by funding.
+
+## 9. Funding Exhaustion
+
+```json
+{
+  "error": "abds_funding_unavailable",
+  "error_description": "The authorized funding source cannot cover this request.",
+  "recovery": "stop_or_reauthorize"
+}
+```
+
+The response does not reveal the Sponsor's confidential balance.
+
+The Client must not silently retry using a user or developer funding source.
+
+## 10. Per-Beneficiary Cap Exhaustion
+
+```json
+{
+  "error": "abds_quota_exceeded",
+  "error_description": "This grant has reached its allowance for the current period.",
+  "quota_reset": "2026-08-01T00:00:00Z",
+  "recovery": "wait_or_reauthorize"
+}
+```
+
+## 11. Revocation
 
 ```javascript
-// Show quota status in your app UI
-async function getQuotaStatus(userId) {
-  // Call your backend, never the AI provider directly from client
-  const response = await fetch('/api/quota-status', {
-    headers: { Authorization: `Bearer ${userJWT}` }
-  });
-  
-  const { quota_cap, quota_used, quota_remaining, quota_reset } = await response.json();
-  
-  return {
-    used: quota_used,
-    cap: quota_cap,
-    remaining: quota_remaining,
-    resetDate: new Date(quota_reset),
-    percentUsed: Math.round((quota_used / quota_cap) * 100)
-  };
-}
-```
+function handleABDSFailure(result) {
+  switch (result.error) {
+    case "abds_token_revoked":
+    case "abds_sponsorship_ended":
+      return { requiresReauthorization: true };
 
-## Handling Revocation Gracefully
+    case "abds_quota_exceeded":
+      return { allowanceExhausted: true };
 
-```javascript
-async function makeAICall(userId, message) {
-  try {
-    return await callAI(userId, message);
-  } catch (error) {
-    if (error.code === 'abds_token_revoked') {
-      // Clear stored token, prompt re-authorization
-      await db.users.update({
-        where: { id: userId },
-        data: { anthropic_delegation_token: null }
-      });
-      return { requiresReauth: true };
-    }
-    if (error.message === 'ABDS_QUOTA_EXCEEDED') {
-      return { quotaExceeded: true, upgradeUrl: 'https://anthropic.com/account/apps' };
-    }
-    throw error;
+    case "abds_funding_unavailable":
+      return {
+        sponsoredAccessUnavailable: true,
+        allowSilentPayerFallback: false
+      };
+
+    default:
+      return { retryable: false };
   }
 }
 ```
 
-## Supabase Edge Function Pattern (For Mobile Apps)
+## 12. Discovery Check
 
-```typescript
-// supabase/functions/ai-proxy/index.ts
-import { createClient } from '@supabase/supabase-js';
+Before offering sponsored access, a Client should verify that Provider metadata includes:
 
-Deno.serve(async (req) => {
-  const authHeader = req.headers.get('Authorization');
-  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!);
-  
-  // Verify the user's JWT
-  const { data: { user } } = await supabase.auth.getUser(authHeader?.replace('Bearer ', '') ?? '');
-  if (!user) return new Response('Unauthorized', { status: 401 });
-
-  // Get user's delegation token from database
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('anthropic_delegation_token')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile?.anthropic_delegation_token) {
-    return new Response(JSON.stringify({ requiresAuth: true }), { status: 402 });
-  }
-
-  const body = await req.json();
-
-  // Forward to Anthropic using user's delegation token
-  const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${profile.anthropic_delegation_token}`
-    },
-    body: JSON.stringify(body)
-  });
-
-  return new Response(anthropicResponse.body, {
-    headers: { 'Content-Type': 'application/json' }
-  });
-});
+```json
+{
+  "abds_version": "0.4",
+  "profiles_supported": ["basic", "standard", "sponsored_funding"],
+  "authorization_details_types_supported": ["abds_ai_delegation"],
+  "funding_source_types_supported": ["user_entitlement", "sponsor_budget"],
+  "sponsorship_programs_supported": true
+}
 ```
+
+The exact metadata field names remain draft until the discovery profile is registered and tested.

@@ -8,7 +8,7 @@ This document records decisions that have been made in the ABDS proposal and the
 
 **Decision:** ABDS extends OAuth 2.0 rather than defining a new authentication protocol from scratch.
 
-**Rationale:** OAuth 2.0 is universally understood by developers and already implemented by all major AI providers for their existing authentication flows. Extending it means developers need to learn only the ABDS-specific scopes and claims, not an entirely new protocol. It also means ABDS can leverage existing OAuth libraries, tooling, and security analysis.
+**Rationale:** OAuth 2.0 has mature libraries, deployment experience, security analysis, and extensibility mechanisms. Profiling it lets ABDS focus on metered-resource authorization rather than inventing a new credential protocol.
 
 **Considered alternative:** A new purpose-built protocol with AI-specific primitives. Rejected due to adoption friction and the difficulty of competing with established standards.
 
@@ -30,11 +30,11 @@ This document records decisions that have been made in the ABDS proposal and the
 
 ---
 
-## D4: All API Calls Must Go Through a Backend Proxy
+## D4: Sensitive Credentials Must Not Be Exposed to Untrusted Clients
 
-**Decision:** The ABDS spec requires that delegation tokens never be stored or used client-side in mobile applications. All API calls must be proxied through the Consumer Application's backend.
+**Decision:** Backend-mediated token handling is the default for consumer applications. Direct public-client execution is permitted only when the Provider explicitly supports it with suitably short-lived, audience-restricted, sender-constrained credentials and an equivalent risk profile.
 
-**Rationale:** A delegation token grants access to a user's subscription quota. If exposed client-side, it could be extracted and used by a third party to exhaust the user's quota. This is a more serious harm than a developer's API key being stolen.
+**Rationale:** An ABDS credential can consume a user's or Sponsor's scarce allowance. Browser storage, mobile application packages, and logs are common extraction paths. The standard should define the required security outcome without making one network topology the only compliant architecture.
 
 ---
 
@@ -43,3 +43,39 @@ This document records decisions that have been made in the ABDS proposal and the
 **Decision:** ABDS is proposed as an open, cross-vendor standard with an MIT license.
 
 **Rationale:** A proprietary implementation by one AI provider would solve the problem partially but create new fragmentation. Developers would need different flows for each provider. An open standard enables developer portability and focuses vendor competition on model quality rather than billing model lock-in.
+
+---
+
+## D6: The Core Model Is Payer-Neutral
+
+**Decision:** ABDS separates the Resource User, Beneficiary, Funding Principal, Economic Authorizer, Client, and Provider.
+
+**Rationale:** User-funded quota is only one instance of the underlying problem. Employers, universities, governments, donors, foundations, membership organizations, Provider promotions, and developers may also fund bounded usage. The same grant, token, and ledger model can support these cases without assuming that the user is always the payer.
+
+**Considered alternative:** Keep ABDS limited to user subscriptions and create an unrelated Sponsor protocol. Rejected because it would duplicate the core grant and accounting semantics.
+
+---
+
+## D7: Structured Economic Policy Uses Rich Authorization Requests
+
+**Decision:** ABDS v0.4 uses OAuth 2.0 Rich Authorization Requests as the preferred carrier for cap, period, model, operation, funding offer, and overage policy.
+
+**Rationale:** OAuth scopes are intentionally coarse and cannot safely represent a growing structured economic policy. RFC 9396 provides a standards-track mechanism intended for fine-grained authorization details.
+
+**Considered alternative:** Continue adding custom top-level query parameters such as `quota_cap` and `model_scope`. Rejected as less interoperable and harder to validate.
+
+---
+
+## D8: Funding Does Not Grant Data Access
+
+**Decision:** Sponsor funding does not authorize Sponsor access to prompts, outputs, files, conversations, or user identity.
+
+**Rationale:** Economic sponsorship and data disclosure are separate decisions. Conflating them would turn an access mechanism into a surveillance mechanism and undermine user trust.
+
+---
+
+## D9: No Silent Payer Substitution
+
+**Decision:** When an authorized funding source becomes unavailable, ABDS must stop, use another already-authorized source, or obtain fresh authorization.
+
+**Rationale:** Silently charging a user or developer after Sponsor exhaustion breaks the economic consent shown to every party.

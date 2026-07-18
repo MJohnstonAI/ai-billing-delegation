@@ -32,14 +32,22 @@ Example additional metadata fields:
   "token_endpoint": "https://auth.provider.example/oauth/token",
   "revocation_endpoint": "https://auth.provider.example/oauth/revoke",
   "abds_supported": true,
-  "abds_version": "0.3",
-  "abds_profiles_supported": ["basic", "standard"],
+  "abds_version": "0.4",
+  "abds_profiles_supported": ["basic", "standard", "sponsored_funding"],
+  "abds_authorization_details_types_supported": ["abds_ai_delegation"],
   "abds_usage_introspection_endpoint": "https://api.provider.example/v1/abds/delegations/{delegation_id}/usage",
   "abds_supported_scopes": [
     "ai.quota.delegate",
     "ai.quota.read"
   ],
   "abds_supported_quota_periods": ["daily", "weekly", "monthly"],
+  "abds_funding_source_types_supported": [
+    "user_entitlement",
+    "sponsor_budget",
+    "provider_promotion",
+    "developer_account"
+  ],
+  "abds_sponsorship_programs_supported": true,
   "abds_model_scope_supported": true,
   "abds_reservation_supported": false,
   "abds_sender_constrained_tokens_supported": true
@@ -59,8 +67,9 @@ Example:
 ```json
 {
   "issuer": "https://auth.provider.example",
-  "abds_version": "0.3",
-  "profiles_supported": ["basic", "standard"],
+  "abds_version": "0.4",
+  "profiles_supported": ["basic", "standard", "sponsored_funding"],
+  "authorization_details_types_supported": ["abds_ai_delegation"],
   "authorization_endpoint": "https://auth.provider.example/oauth/authorize",
   "token_endpoint": "https://auth.provider.example/oauth/token",
   "token_exchange_supported": true,
@@ -73,6 +82,14 @@ Example:
     "ai.quota.read"
   ],
   "supported_quota_periods": ["daily", "weekly", "monthly"],
+  "funding_source_types_supported": [
+    "user_entitlement",
+    "organization_budget",
+    "sponsor_budget",
+    "provider_promotion",
+    "developer_account"
+  ],
+  "sponsorship_programs_supported": true,
   "model_scope_supported": true,
   "reservation_supported": false,
   "sender_constrained_tokens_supported": true,
@@ -96,6 +113,8 @@ A minimal ABDS discovery response should include:
 | `usage_introspection_endpoint` | Yes | Provider-authoritative usage endpoint |
 | `supported_scopes` | Yes | Supported ABDS scopes |
 | `supported_quota_periods` | Yes | Supported delegation periods |
+| `authorization_details_types_supported` | Yes | Supported ABDS Rich Authorization Request type identifiers |
+| `funding_source_types_supported` | Yes | Funding-source types the Provider can authorize and enforce |
 
 ## Optional Metadata Fields
 
@@ -110,6 +129,10 @@ A minimal ABDS discovery response should include:
 | `app_verification_required` | Whether apps must be verified before requesting ABDS scopes |
 | `max_delegation_period` | Maximum permitted quota period |
 | `max_delegated_resource_units` | Provider-defined maximum delegated cap |
+| `sponsorship_programs_supported` | Whether the Provider supports Sponsor-funded program budgets |
+| `sponsor_verification_required` | Whether Sponsors must be verified before publishing funding offers |
+| `sponsor_reporting_modes_supported` | Sponsor reporting modes such as `aggregate_only` |
+| `consent_receipts_supported` | Whether the Provider can issue versioned consent receipts |
 
 ## Identifier Guidance
 
@@ -138,6 +161,10 @@ Discovery metadata should not reveal:
 - provider-internal risk thresholds,
 - private model availability by account,
 - internal grant identifiers.
+- Sponsor pool balances,
+- Beneficiary eligibility data,
+- private funding offers, or
+- Sponsor risk and verification signals.
 
 Discovery describes provider capability, not user entitlement.
 
@@ -148,3 +175,5 @@ Discovery describes provider capability, not user entitlement.
 3. Should provider discovery include profile-level conformance details?
 4. Should apps be allowed to discover maximum cap ranges before user authorization?
 5. Should model families be represented by provider-defined strings or a cross-provider taxonomy?
+6. Should the ABDS authorization-details type be registered once globally or versioned by profile?
+7. Which Sponsor capabilities belong in public discovery versus authenticated Sponsor metadata?

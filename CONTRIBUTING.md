@@ -1,54 +1,88 @@
 # Contributing to ABDS
 
-This proposal needs community input to become a standard. There are several ways to contribute depending on your background.
+ABDS is an early payer-neutral delegation proposal. It needs evidence, critique, and implementation experience before it can credibly seek standards discussion.
 
-## Ways to Contribute
+## Share a Real Use Case
 
-### Share Your Story (Most Important Right Now)
+Open an Issue titled **"Use case: [app or program name]"** and describe:
 
-Open an Issue titled **"My use case: [app name]"** and describe:
-- What app you built or tried to build
-- How the current billing model affected your decision
-- What ABDS would have changed for you
+- who uses the application,
+- who currently pays for AI usage,
+- who could fund it under ABDS,
+- which limits and privacy promises are required,
+- how the current billing model affected the product, and
+- what would make the use case unacceptable to an AI Provider.
 
-A collection of real use cases is the strongest possible argument to present to AI providers. If 200 developers document the same problem, it becomes impossible to dismiss.
+Useful examples include consumer apps, nonprofit programs, education, employers, universities, government services, accessibility tools, and Provider-funded promotions.
 
-### Improve the Technical Specification
+## Review the Specification
 
-The [SPEC.md](SPEC.md) is a draft and needs rigorous review. Specific areas needing input:
+High-priority questions:
 
-- Token refresh flow (not yet specified)
-- Handling of multi-model subscriptions (e.g. a user subscribed to a bundle)
-- B2B variant — where an organization delegates quota to employee apps
-- Security review of the consent screen requirements
-- Edge cases in quota accounting (concurrent requests, partial failures)
+- Is payer-neutral funding a sound generalization?
+- Should Sponsored Funding be part of the core model or an extension?
+- Is OAuth 2.0 Rich Authorization Requests the right carrier for economic policy?
+- Are grant authorization policy and ledger state separated correctly?
+- How should token refresh and Token Exchange work?
+- How should variable-cost requests reserve and settle units?
+- Which Sponsor reports are useful without becoming surveillance?
+- How should Beneficiary eligibility be attested?
+- Which policy changes require renewed consent?
+- What attack would make a Provider reject the design?
 
-Submit improvements as Pull Requests against `SPEC.md`.
+Submit improvements as Pull Requests against `SPEC.md`, `SPONSORED_DELEGATION.md`, or the relevant supporting document.
 
-### Build a Reference Implementation
+## Build a Reference Simulator
 
-The most powerful contribution would be a mock implementation showing:
-- A sample AI provider authorization server with ABDS endpoints
-- A sample Consumer Application implementing the full flow
-- Test cases covering quota exhaustion, revocation, and error states
+A useful reference implementation would include:
 
-This makes the standard concrete and reviewable rather than theoretical.
+- a mock Provider Authorization Server and Resource Server,
+- Provider discovery metadata,
+- a user-funded flow,
+- a Sponsor program and NatureGuard Client,
+- provider-controlled consent,
+- a grant service,
+- short-lived Execution Tokens,
+- a Usage Ledger,
+- reservation and settlement,
+- grant and program revocation,
+- quota exhaustion,
+- tests proving no silent payer substitution,
+- tests proving Sponsor funding does not expose prompts or outputs, and
+- a machine-readable conformance report.
 
-### Spread the Proposal
+The simulator should use fictional Provider domains and resource units. It must not imply that a real Provider implements ABDS unless that integration exists and is authorized.
 
-- Star this repository (signals demand to AI companies monitoring GitHub)
-- Share on Hacker News, Reddit (r/MachineLearning, r/LocalLLaMA), X/Twitter
-- Tag @AnthropicAI, @OpenAI, @GoogleDeepMind in posts about ABDS
-- Reference this repo in discussions about AI developer ecosystem gaps
+## Add Technical Evidence
 
-### AI Agent Contributions
+Especially useful contributions include:
 
-See [AI_CONTRIBUTIONS/README.md](AI_CONTRIBUTIONS/README.md) for how AI systems can contribute analysis, critiques, and implementation suggestions.
+- OAuth and authorization-details analysis,
+- security and privacy review,
+- Provider economics,
+- Sponsor governance,
+- nonprofit or public-interest funding requirements,
+- ledger concurrency and idempotency,
+- consent research,
+- conformance test vectors, and
+- comparison with established delegated authorization systems.
+
+## AI-Assisted Contributions
+
+See [AI_CONTRIBUTIONS/README.md](AI_CONTRIBUTIONS/README.md).
+
+Contributors should:
+
+- identify the model and date,
+- distinguish generated analysis from human decisions,
+- verify technical claims against primary sources,
+- avoid claiming provider support that does not exist, and
+- retain the human contributor's responsibility for the final change.
 
 ## Code of Conduct
 
-This is a technical standards proposal. Contributions should be substantive, specific, and constructive. Personal attacks, spam, and off-topic discussion will be removed.
+Contributions should be substantive, specific, respectful, and open to challenge. Personal attacks, spam, and off-topic promotion will be removed.
 
 ## Governance
 
-Currently maintained by [@MJohnstonAI](https://github.com/MJohnstonAI). As the proposal gains traction, governance will move toward a working group model with representatives from multiple stakeholders.
+ABDS is currently maintained by [@MJohnstonAI](https://github.com/MJohnstonAI). If the project gains external implementation and review, governance should move toward a multi-stakeholder working group including Provider, developer, security, privacy, user, and Funding Principal perspectives.

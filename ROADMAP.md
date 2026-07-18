@@ -1,134 +1,150 @@
 # ABDS Roadmap
 
-> Intended evolution path for the AI Billing Delegation Standard from draft proposal to provider-review candidate.
-
-ABDS is still a draft. The goal is not to freeze a premature standard, but to separate the stable core from design areas that need review by AI providers, OAuth specialists, API security engineers, consumer AI developers, and standards practitioners.
+> Evolution path from an open payer-neutral delegation proposal to a testable interoperability profile.
 
 ## Stable Core Thesis
 
 ```text
-User Subscription Entitlement
-        ↓
+Funding Entitlement or Budget
+        |
 Delegated AI Grant
-        ↓
+        |
 Short-lived Execution Token
-        ↓
+        |
 Provider-side Usage Ledger
 ```
 
-The central design principle remains:
+The Funding Principal may be the user, an organization, a Sponsor, the AI Provider, or the developer.
 
-> Mutable quota state does not belong in JWT claims. The execution token references the delegation; the provider-side grant and usage ledger remain authoritative.
+The central design rules are:
 
-## Version Roadmap
+1. Mutable economic state does not belong in bearer-token claims.
+2. The Provider's grant and ledger remain authoritative.
+3. Funding does not imply access to user content.
+4. A failed funding source cannot silently shift cost to another party.
 
-### v0.2 — Current Architecture Draft
+## Version History and Roadmap
 
-Status: current baseline.
+### v0.2 - Four-Object Architecture
 
 Established:
 
-- Four-object architecture
-- Server-side Delegated AI Grant
-- Short-lived Execution Token
-- Provider-side Usage Ledger
-- Usage Introspection Endpoint
-- Revocation requirements
-- Removal of live quota state from JWT claims
+- server-side Delegated AI Grant,
+- short-lived Execution Token,
+- provider-side Usage Ledger,
+- usage-status interface,
+- revocation, and
+- removal of live quota from token claims.
 
-### v0.3 — Provider Discovery, Profiles, and Threat Model
+### v0.3 - Discovery, Profiles, and Threat Model
 
-Goal: make ABDS easier for reviewers and implementers to evaluate.
+Established:
 
-Planned additions:
+- provider discovery,
+- implementation profiles,
+- formal threat model,
+- OAuth terminology alignment,
+- public `delegation_id`, and
+- stronger Client security guidance.
 
-- Provider discovery metadata
-- ABDS implementation profiles
-- Formal threat model
-- Stronger OAuth terminology alignment
-- Clarified `delegation_id` semantics
-- Revised public-client and backend-token-handling guidance
+### v0.4 - Payer-Neutral and Sponsored Delegation
 
-### v0.4 — Reservation and Settlement Profile
+Status: current draft.
 
-Goal: handle streaming, multimodal, batch, and agentic workloads.
+Established:
 
-Planned additions:
+- Funding Principal, Economic Authorizer, Resource User, and Beneficiary separation,
+- user, organization, Sponsor, provider-promotion, and developer funding-source types,
+- Sponsored Delegation Profile,
+- NatureGuard Sponsor scenario,
+- Rich Authorization Request alignment,
+- separation of grant authorization policy from ledger state,
+- Sponsor privacy defaults,
+- no-silent-payer-substitution rule, and
+- Build Week presentation strategy.
 
-- Quota estimation
-- Reservation lock
-- Execution within a bounded envelope
-- Settlement against actual usage
-- Release of unused reserved quota
-- Cancellation and partial-completion semantics
-- Error handling for insufficient delegated quota
+### v0.5 - Reservation and Settlement
 
-### v0.5 — Reference Implementation
+Goal: handle variable-cost execution.
 
-Goal: demonstrate practical feasibility.
+Planned:
 
-Possible components:
+- estimate,
+- reservation,
+- bounded execution,
+- settlement,
+- release and refund,
+- cancellation and partial completion,
+- idempotency,
+- agent-step budgets, and
+- sponsor-pool settlement behavior.
 
-- Mock ABDS authorization server
-- Mock provider-side grant service
-- Usage ledger service
-- Example consumer app backend
-- Example consent screen
-- Example introspection endpoint
-- Developer test harness
+### v0.6 - Reference Simulator and Conformance Draft
 
-### v0.6 — Provider-Review Draft
+Goal: turn the proposal into a testable developer tool.
 
-Goal: produce a version suitable for serious provider critique.
+Planned:
 
-Planned work:
+- mock Authorization Server and Resource Server,
+- user and Sponsor program flows,
+- grant and ledger service,
+- consent-screen reference,
+- token and discovery test vectors,
+- error and revocation test cases,
+- Sponsor privacy tests,
+- no-silent-payer-substitution tests, and
+- machine-readable conformance report.
 
-- Security review checklist
-- Provider economics appendix
-- Abuse-control appendix
-- Consent UX profile
-- Implementation profile checklist
-- Open questions clearly separated from normative text
+### v0.7 - Provider-Review Draft
 
-### v1.0 — Candidate Standards Submission
+Goal: produce a draft suitable for serious Provider and OAuth critique.
 
-Goal: prepare a standards-body candidate or provider-neutral profile.
+Planned:
+
+- external security review,
+- consent receipt profile,
+- Provider economics appendix,
+- Sponsor governance and privacy appendix,
+- formal authorization-details type,
+- privacy threat analysis,
+- conformance checklist, and
+- normative versus informative text separation.
+
+### v1.0 - Candidate Standards Discussion
 
 Possible paths:
 
-- OAuth profile discussion
-- OpenID Foundation profile discussion
-- IETF individual Internet-Draft
-- Provider-led working group
-- Independent interoperability profile
+- IETF OAuth Working Group discussion,
+- OpenID Foundation community or working-group discussion,
+- provider-led consortium,
+- independent interoperability profile, or
+- individual Internet-Draft after sufficient implementation experience.
 
-## Known Non-Goals Before v1.0
-
-These ideas may be explored later, but should not complicate the core draft:
-
-- Cross-provider quota portability
-- Provider-to-provider delegated session routing
-- Marketplace revenue sharing
-- A universal AI credit currency
-- Blockchain or decentralized ledger requirements
-- Mandatory pricing model standardization
-- Mandated consumer subscription percentage allocation
-- Enterprise procurement workflows
+ABDS should not claim standards-body status before review and implementation evidence exist.
 
 ## Near-Term Priorities
 
-1. Add provider discovery metadata.
-2. Add Basic / Standard / Advanced implementation profiles.
-3. Add a formal threat model.
-4. Clarify OAuth alignment in `SPEC.md`.
-5. Clarify `delegation_id` as the public reference identifier.
-6. Keep reservation / settlement as a v0.4 profile rather than forcing it into the core.
-7. Invite external review through GitHub Issues.
+1. Build a small mock provider and ABDS Studio simulator.
+2. Demonstrate the NatureGuard sponsored-funding lifecycle.
+3. Produce authorization-details schemas and test vectors.
+4. Define consent receipt and policy-version semantics.
+5. Define reservation and settlement.
+6. Obtain review from OAuth, Provider-platform, security, privacy, and nonprofit funding experts.
+7. Replace illustrative endpoint and type placeholders with registered or collision-resistant identifiers.
+
+## Known Non-Goals Before v1.0
+
+- universal AI currency,
+- cross-provider transfer of resource units,
+- mandatory Provider pricing,
+- blockchain settlement,
+- mandated subscription allocation percentages,
+- Sponsor access to user content,
+- marketplace revenue sharing, and
+- complete enterprise procurement workflows.
 
 ## Review Milestone
 
-The next meaningful milestone is not adoption by a major AI provider. The next milestone is:
+The next meaningful milestone is:
 
-> A credible AI platform, OAuth, API security, or developer-infrastructure reviewer publicly critiques the model.
-
-ABDS should be designed to survive that scrutiny.
+> A runnable simulator survives public critique from an OAuth or AI Provider platform engineer and demonstrates that user-funded and Sponsor-funded flows share one coherent core model.

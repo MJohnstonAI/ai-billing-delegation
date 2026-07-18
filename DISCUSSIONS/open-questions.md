@@ -79,3 +79,64 @@ This document tracks unresolved design questions in the ABDS proposal. Comment v
 **Context:** A provider could implement ABDS but make delegated calls second-class citizens to protect API revenue.
 
 **Open:** Needs a non-discrimination clause in the spec or governance model.
+
+---
+
+## Q7: Sponsored Funding Eligibility
+
+**Question:** Who should attest that a Beneficiary is eligible for a Sponsor program?
+
+**Options considered:**
+- A: The AI Provider verifies eligibility.
+- B: The Sponsor attests eligibility.
+- C: A trusted external verifier issues a privacy-preserving credential.
+- D: The Client attests eligibility subject to audit and fraud controls.
+
+**Open:** Different programs may require different trust models. The standard should avoid forcing sensitive eligibility data into OAuth requests.
+
+---
+
+## Q8: Sponsor Reporting and Privacy
+
+**Question:** What is the minimum useful Sponsor report that does not become user surveillance?
+
+**Current lean:** Aggregate units, active Beneficiary counts, grant lifecycle totals, and model or operation categories. No prompts, outputs, files, conversation history, or identity by default.
+
+**Open:** Should ABDS define minimum cohort sizes or privacy thresholds?
+
+---
+
+## Q9: Multiple Funding Sources
+
+**Question:** Can one grant draw from several Funding Principals?
+
+**Options considered:**
+- A: One grant always resolves to one funding source at execution time.
+- B: A grant contains an ordered list of already-authorized sources.
+- C: The Provider can split one execution across sources.
+
+**Current lean:** Option A for the first implementation. It produces the clearest consent, accounting, error, and revocation semantics.
+
+---
+
+## Q10: Sponsorship Policy Changes
+
+**Question:** Which program changes require renewed consent?
+
+**Current lean:** Higher caps, broader models or operations, paid overage, a new Funding Principal, broader Sponsor data visibility, and material duration extensions require renewed consent. Reductions require notification when they affect expected service.
+
+---
+
+## Q11: Authorization Details Identifier
+
+**Question:** What collision-resistant identifier and registration path should ABDS use for its Rich Authorization Request type?
+
+**Open:** The current `abds_ai_delegation` value is explicitly a draft placeholder.
+
+---
+
+## Q12: Cross-Provider Continuity
+
+**Question:** Should ABDS define a future mechanism for a Client to handle several separately authorized Provider and funding-source grants?
+
+**Open:** Cross-provider portability of units is out of scope, but Client routing among independent grants may be useful.
