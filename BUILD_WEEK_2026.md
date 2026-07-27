@@ -1,230 +1,145 @@
-# ABDS OpenAI Build Week 2026 Submission Strategy
+# ABDS OpenAI Build Week 2026 Strategy
 
-> Documentation-only competition plan reviewed against the official rules on 18 July 2026.
+> Historical competition strategy updated to reflect the canonical ABDS v0.5 architecture.
 
 ## Executive Verdict
 
-ABDS has a strong and unusual idea, a credible technical foundation, and a polished standards brief. The repository in its current form is not yet a competitive Build Week submission because the challenge requires a working, consistently runnable project with a coherent product experience. A specification and slide deck alone would likely fail the functionality requirement and score poorly on technological implementation and design.
+ABDS is a serious standards proposal, but documentation and presentations alone are not a complete competition product. The strongest entry remains **ABDS Studio**: a runnable simulator that demonstrates authorization, usage attribution, reservation, settlement, revocation, privacy, and no silent payer substitution.
 
-The best competition strategy is to keep ABDS as the protocol thesis and present a small working product that makes the thesis visible.
+The simulator must use a mock Provider unless a real Provider explicitly supports the required flow. It must not imply OpenAI or another Provider has adopted ABDS.
 
 ## Recommended Entry
 
-### Track
-
-**Developer Tools**
-
-### Product
-
-**ABDS Studio - a runnable sandbox for designing, simulating, and testing payer-neutral AI delegation**
-
-### One-line pitch
-
-> ABDS Studio lets developers simulate AI usage paid by a user, employer, sponsor, or provider - with explicit consent, hard budgets, short-lived grants, and a provider-authoritative ledger.
-
-### Why this is the strongest framing
-
-- It turns the existing standards work into a testable developer product.
-- It makes the sponsor-funded idea the memorable differentiator.
-- Judges can understand the complete flow in under three minutes.
-- A mock provider is sufficient to demonstrate the protocol without implying that OpenAI or another provider already supports ABDS.
-- It gives Codex and GPT-5.6 a visible role in implementation, test generation, threat-model evaluation, and protocol critique.
-
-## What the Runnable Demonstration Should Show
-
-The minimum coherent demonstration is one end-to-end NatureGuard scenario:
-
-1. A sponsor creates a NatureGuard funding program with a total budget, per-user cap, allowed model class, and end date.
-2. A user opens NatureGuard and sees provider-controlled consent explaining who pays and what the sponsor can see.
-3. The user authorizes the grant.
-4. NatureGuard performs a simulated AI request using a short-lived execution token.
-5. The provider ledger debits the sponsor program, not the user or developer.
-6. The user views usage and revokes the grant.
-7. A final request demonstrates a hard stop after revocation or budget exhaustion.
-
-The demo should use simulated AI units and a mock provider unless a real provider explicitly supports the required delegated billing flow. Do not present fabricated provider endpoints as real integrations.
-
-## Three Presentation Options
-
-### Option A - ABDS Studio
-
 **Track:** Developer Tools  
-**Recommendation:** Best option
+**Product:** ABDS Studio  
+**Pitch:**
 
-Present ABDS as a protocol workbench with:
+> ABDS Studio simulates AI usage funded by a user, organization, sponsor, Provider promotion, or developer - with explicit consent, hard budgets, short-lived execution tokens, one event per model attempt, and Provider-authoritative settlement.
 
-- sponsor, user, and provider views,
-- consent-screen generator,
-- grant and token inspector,
-- live usage ledger,
-- revocation and exhaustion tests,
-- downloadable conformance report, and
-- NatureGuard as the example Client.
+## v0.5 Demonstration Scope
 
-This option aligns most directly with the repository and gives judges something concrete to test.
+The minimum coherent NatureGuard demonstration should show:
 
-### Option B - Sponsored AI Gateway
+1. Green Earth Foundation creates a Sponsor program.
+2. The program defines total, per-user, and per-request caps; permitted models; duration; and aggregate reporting.
+3. A user sees Provider-controlled consent explaining who pays and what the Sponsor can see.
+4. The Provider creates a grant bound to NatureGuard, the Beneficiary, and Sponsor funding bucket.
+5. NatureGuard receives a short-lived Execution Token.
+6. One logical request triggers a primary call, retry, and fallback.
+7. Each physical attempt creates an immutable Usage Event.
+8. The Provider reserves a bounded envelope.
+9. Actual measured usage is settled idempotently and unused quantity is released.
+10. The user views grant-specific usage and revokes access.
+11. A later request demonstrates a hard stop after revocation or exhaustion.
+12. Sponsor reporting remains aggregate and excludes prompts, outputs, identity, and Client-internal workflow labels.
 
-**Track:** Work and Productivity
+## Three-Minute Storyboard
 
-Present a control plane that lets a nonprofit, employer, or university fund approved AI tools for a community. The product experience centers on program creation, policy, aggregate reporting, and privacy-safe funding.
+### 0:00-0:25 - Structural problem
 
-This has a clearer buyer but requires more administrative product surface. It is a good future commercial direction, but harder to finish convincingly within Build Week.
+Show the current choices: developer-funded inference, app-specific credits, or Bring Your Own Key.
 
-### Option C - NatureGuard
+Introduce ABDS as a Provider-enforced funding and authorization layer.
 
-**Track:** Apps for Your Life
+### 0:25-0:55 - Sponsor program
 
-Present a consumer nature assistant where conservation sponsors fund public AI usage. ABDS becomes the invisible infrastructure behind the app.
+Create the NatureGuard program:
 
-This is emotionally legible and visually demonstrable, but judges may primarily evaluate the nature app and miss the infrastructure innovation. Choose it only if NatureGuard itself can be a polished, genuinely useful product.
-
-## Judging-Criteria Strategy
-
-| Criterion | What ABDS must demonstrate |
-|---|---|
-| **Technological Implementation** | A working, non-trivial grant lifecycle; policy enforcement; ledger updates; revocation; tests; clear Codex/GPT-5.6 contribution record. |
-| **Design** | One coherent journey across sponsor setup, user consent, AI use, and user control. Avoid presenting disconnected admin dashboards. |
-| **Potential Impact** | A specific claim: sponsor-funded AI can make useful applications accessible without shifting unpredictable inference costs to users or small developers. |
-| **Quality of the Idea** | The payer, user, developer, and provider are separate roles; funding becomes an explicit, revocable protocol decision. |
-
-## Three-Minute Demo Storyboard
-
-### 0:00-0:20 - The problem
-
-Show one sentence:
-
-> Consumer AI usually forces the developer, the user, or an awkward credit system to pay.
-
-Then introduce the fourth option:
-
-> With ABDS, an authorized sponsor can fund bounded usage.
-
-### 0:20-0:50 - Sponsor program
-
-Create the Green Earth Foundation program:
-
-- NatureGuard only,
-- 10,000 total units,
-- 100 units per user,
-- economy text and vision models,
-- no overage,
+- 10,000 total units;
+- 100 units per Beneficiary per month;
+- five-unit request envelope;
+- approved economy text and vision models;
+- no paid overage;
 - aggregate reporting only.
 
-### 0:50-1:20 - User consent
+### 0:55-1:25 - Consent and grant
 
-Open NatureGuard as a new user. Highlight:
+Show verified Client and Sponsor, Funding Principal, cap, models, duration, privacy, exhaustion behavior, and user revocation.
 
-- Sponsor identity,
-- "You will not be charged,"
-- exact allowance,
-- sponsor data visibility,
-- program end date, and
-- revoke control.
+### 1:25-2:15 - Execution and attribution
 
-### 1:20-1:55 - Funded execution
+Run one logical NatureGuard request. Show:
 
-Authorize the grant and run one NatureGuard request. Show the request moving through:
+- primary timeout;
+- retry or fallback;
+- requested versus resolved model;
+- token and tool-call dimensions;
+- workspace, feature, workflow, and agent-step references;
+- one Usage Event per physical attempt.
 
-```text
-Grant -> short-lived token -> provider enforcement -> sponsor ledger
-```
+### 2:15-2:40 - Reservation and settlement
 
-Show the user's personal allowance unchanged.
-
-### 1:55-2:20 - Safety behavior
-
-Revoke the grant or exhaust the per-user cap. Demonstrate a hard stop with no silent fallback charge.
-
-### 2:20-2:45 - Why it matters
-
-Show the payer-neutral model:
+Show:
 
 ```text
-User | Organization | Sponsor | Provider promotion
-                    |
-              ABDS grant
-                    |
-                 AI use
+Estimate -> Reserve 5 -> Execute -> Settle 3 -> Release 2
 ```
 
-### 2:45-3:00 - Codex and GPT-5.6
+Demonstrate idempotent retry of the settlement without a second charge.
 
-Show the dated work added during Build Week:
+### 2:40-3:00 - Privacy, revocation, and value
 
-- specification generalization,
-- threat scenarios,
-- generated tests,
-- implementation and review iterations, and
-- the `/feedback` Codex session ID.
+Show the Sponsor aggregate dashboard, revoke the grant, and demonstrate denial of a later request. End with:
 
-## Suggested Devpost Description
+> ABDS makes the payer, authorization, execution path, and settlement explicit without sharing API keys or granting funders access to user content.
 
-### Inspiration
+## Product Views
 
-Consumer AI products face a structural billing problem. Small developers either absorb unpredictable inference costs, build their own credit system, or ask ordinary users to bring API keys. We asked a broader question: why must the user or developer always be the payer?
+ABDS Studio should include:
 
-### What it does
+- Sponsor program editor;
+- Provider consent simulator;
+- grant and token inspector;
+- logical-request and physical-attempt trace;
+- Usage Event viewer;
+- reservation and Ledger Event viewer;
+- privacy-safe Sponsor report;
+- revocation, exhaustion, retry, fallback, and duplicate-settlement test controls;
+- schema validator; and
+- downloadable conformance report.
 
-ABDS Studio demonstrates a payer-neutral delegation protocol for AI usage. A user, employer, sponsor, provider promotion, or developer can fund a bounded grant. The AI provider remains the enforcement authority through provider-side grant records, short-lived execution tokens, a usage ledger, explicit consent, and immediate revocation.
+## Judging Alignment
 
-The NatureGuard scenario shows a conservation foundation funding public use of an AI nature assistant. The user sees exactly who pays, what the limit is, and what information the sponsor can access. When funding ends, usage stops rather than silently charging another party.
+| Criterion | Evidence |
+|---|---|
+| Technological implementation | Runnable grant, token, event, reservation, settlement, and revocation lifecycle |
+| Design | One coherent journey across Sponsor, user, Client, and Provider views |
+| Impact | Makes consumer, nonprofit, education, and civic AI funding safer for small developers |
+| Quality of idea | Separates Resource User, Beneficiary, Funding Principal, Client, Provider, usage facts, and economic mutations |
 
-### How it works
+## Minimum Technical Components
 
-ABDS profiles modern OAuth patterns for metered AI resources. Structured authorization details describe model, operation, period, and cap. The provider creates a grant bound to the Client, Beneficiary, and funding source. Execution tokens reference the grant but never contain mutable quota state. The provider ledger is authoritative.
+- mock OAuth Authorization Server and AI Resource Server;
+- Provider grant and funding service;
+- short-lived token issuance;
+- atomic reservation and settlement;
+- append-only Usage and Ledger Events;
+- schema validation;
+- idempotency and concurrency tests;
+- Sponsor privacy controls;
+- no-silent-payer-substitution tests;
+- clear fictional domains and model identifiers.
 
-### How we used Codex and GPT-5.6
+## Honest Positioning
 
-Use this section only after implementation and replace general statements with dated, verifiable examples. Link the relevant commit history and provide the required `/feedback` session ID.
+State clearly:
 
-### Challenges
+- ABDS is an open draft;
+- v0.5 is not Provider adoption;
+- the simulator is a reference implementation;
+- resource units and endpoints are fictional; and
+- real integration requires Provider buy-in and implementation.
 
-The difficult part was separating identity, consent, funding authority, execution credentials, and usage accounting without leaking sponsor balances or user content. Sponsor funding also required a hard rule against silent payer substitution.
+## Repository Preparation
 
-### Accomplishments
+The submission should direct judges to:
 
-- Generalized ABDS from user-funded quota to payer-neutral delegation.
-- Added a sponsored-funding profile and privacy model.
-- Demonstrated the full lifecycle from sponsor policy to revocation.
-- Kept mutable budget state out of execution tokens.
-- Mapped the design to OAuth Rich Authorization Requests and current OAuth security guidance.
+1. `README.md`
+2. `CHANGELOG.md`
+3. `SPEC.md`
+4. `USAGE_ATTRIBUTION.md`
+5. `RESERVATION_SETTLEMENT.md`
+6. `FLOWS.md`
+7. the runnable ABDS Studio directory when implemented.
 
-### What is next
-
-Seek review from OAuth specialists, AI provider platform teams, API-security engineers, nonprofits, and developers building high-impact consumer applications.
-
-## Repository Changes Needed Before Submission
-
-The official rules allow an existing project only when it is meaningfully extended during the submission period, and only the new work is evaluated. The submission therefore needs:
-
-- a working project added between 13 and 21 July 2026,
-- dated commits distinguishing pre-existing material from Build Week additions,
-- a README section documenting specific Codex and GPT-5.6 collaboration,
-- setup and testing instructions,
-- a free working demo, test account, or local sandbox,
-- a public YouTube demo under three minutes,
-- a repository judges can access,
-- the `/feedback` Codex session ID where most core functionality was built, and
-- no claims that an AI provider supports ABDS unless that integration is real and authorized.
-
-## Current Asset Review
-
-The existing 19-slide executive/technical deck is polished and technically serious, but it is too long and too architecture-heavy for the competition demo. It also predates the payer-neutral and sponsor-funded model.
-
-For Build Week:
-
-- use the existing deck as background material for technical reviewers,
-- do not narrate it slide by slide in the video,
-- create a six- or seven-frame demo story around NatureGuard,
-- lead with the sponsor-funded outcome,
-- show one architecture diagram at most, and
-- end on the working product and measurable next step, not the standards roadmap.
-
-## Official Sources
-
-- [OpenAI Build Week overview](https://openai.com/build-week/)
-- [OpenAI Build Week Devpost page](https://openai.devpost.com/)
-- [OpenAI Build Week official rules](https://openai.devpost.com/rules)
-
-The official deadline is 21 July 2026 at 5:00 PM Pacific Time, which is 2:00 AM South Africa Standard Time on 22 July 2026. The rules and Devpost page remain the controlling sources.
+The next competitive milestone is not another explanatory document. It is a polished simulator that proves the v0.5 invariants under retries, fallback, concurrency, revocation, funding exhaustion, and privacy constraints.
