@@ -46,6 +46,7 @@
     "idempotency_key": {"type": "string", "maxLength": 255},
     "unit_type": {"type": "string", "minLength": 1, "maxLength": 200},
     "quantity": {"type": "number"},
+    "released_quantity": {"type": "number", "minimum": 0},
     "funding_source_type": {
       "type": "string",
       "enum": [
