@@ -1,142 +1,71 @@
 # Open Design Questions
 
-This document tracks unresolved design questions in the ABDS proposal. Comment via GitHub Issues linking to the relevant question number.
+This document tracks unresolved questions in ABDS v0.5. Questions already resolved by the current specification are removed or reframed.
 
----
+## Q1: Refresh and Durable Grant Credentials
 
-## Q1: Token Refresh Strategy
+Should Providers issue refresh tokens, use OAuth Token Exchange from a durable grant credential, or require periodic reauthorization? How should token refresh interact with grant expiry, consent changes, and entitlement lapse?
 
-**Question:** Delegation tokens will expire. What is the correct refresh flow?
+## Q2: Multi-Model Bundles and Dynamic Aliases
 
-**Options considered:**
-- A: Standard OAuth refresh token flow (refresh token issued alongside delegation token)
-- B: Re-authorization required on expiry (more secure, worse UX)
-- C: Silent refresh via refresh token, with user notification if subscription has lapsed
+How should `model_scope` represent changing bundles, aliases, model revisions, and Provider routers without granting unexpectedly broader access?
 
-**Current lean:** Option A with a 90-day refresh token lifetime, matching typical OAuth patterns.
+## Q3: Minimum Interoperable Usage Event
 
-**Open:** How does refresh interact with quota reset periods?
+Which v0.5 Usage Event fields are mandatory across Providers, and which remain Provider-defined extensions?
 
----
+## Q4: Billability of Failed and Speculative Attempts
 
-## Q2: Multi-Model Subscription Bundles
+Which failed-before-inference, failed-after-partial-inference, superseded, speculative, safety, and fallback attempts may be billed, and how must that policy be disclosed?
 
-**Question:** Some users subscribe to bundles (e.g. "access to all Claude models"). How does model_scope interact with bundle subscriptions?
+## Q5: Reservation Thresholds
 
-**Options considered:**
-- A: Bundle subscribers can delegate access to any model in their bundle
-- B: model_scope must be explicitly set; no wildcard delegation
-- C: Provider exposes a `/v1/subscription/models` endpoint; app queries it during auth
+Should reservation be mandatory for every streaming request, only above a cost/risk threshold, or only for specific modalities and agentic workloads?
 
-**Open:** No consensus yet. Input needed from developers building multi-model apps.
+## Q6: Reconciliation Time Bounds
 
----
+How long may a settlement remain pending after Provider failure, delayed batch completion, or cross-region uncertainty? What user-facing status is required?
 
-## Q3: B2B Variant
+## Q7: Signed Usage and Settlement Receipts
 
-**Question:** Should ABDS cover the case where an organization delegates quota to employee-facing internal apps?
+Should signed receipts be part of Standard or Advanced? Which key-discovery, rotation, replay, and retention profile should be used?
 
-**Context:** A company with an enterprise Claude contract wants employees to use an internal HR chatbot without each employee needing individual API keys.
+## Q8: Client Attribution Echo Policy
 
-**Options considered:**
-- A: Out of scope for v1.0, addressed in a separate ABDS-Enterprise extension
-- B: Add an `organization_id` claim to the token; organizations can delegate org quota
+Which workspace, feature, workflow, agent, experiment, trace, or span references should a Provider echo? Should pairwise pseudonymization be required?
 
-**Open:** Is this a different enough use case to warrant separate treatment?
+## Q9: Sponsor Reporting and Privacy Thresholds
 
----
+What minimum cohort sizes, noise, suppression, or aggregation rules prevent Sponsor reports from becoming user surveillance?
 
-## Q4: Quota Accounting for Streaming Responses
+## Q10: Eligibility Attestation
 
-**Question:** Streaming API responses consume tokens progressively. How is quota decremented for streaming calls?
+Should Sponsor eligibility be verified by the Provider, Sponsor, Client, or a privacy-preserving external credential? How is fraud controlled without centralizing sensitive data?
 
-**Options considered:**
-- A: Deduct estimated tokens at request time; reconcile on completion
-- B: Deduct tokens as they are generated (requires real-time quota checks)
-- C: Deduct on completion only; risk of quota being exceeded mid-stream
+## Q11: Multiple Authorized Funding Sources
 
-**Open:** Option A is pragmatic but requires an estimation model. Input from AI provider engineers needed.
+Should one logical request ever split across funding buckets, or should each settlement always resolve to one source? v0.5 currently favors one funding bucket per settlement.
 
----
+## Q12: Competitive Neutrality
 
-## Q5: Handling Subscription Lapse Mid-Delegation
+Should ABDS include non-discrimination guidance so delegated calls are not intentionally degraded relative to direct API calls, or is this outside a technical standard?
 
-**Question:** A user's subscription lapses while an app holds a valid delegation token. What is the correct behaviour?
+## Q13: Authorization Details Identifier
 
-**Options considered:**
-- A: Delegation token immediately invalidated; next API call returns `abds_subscription_lapsed`
-- B: Grace period matching the provider's subscription grace period
-- C: Delegation token remains valid until its own expiry; provider absorbs the cost
+What collision-resistant identifier and registration path should replace the `abds_ai_delegation` placeholder?
 
-**Current lean:** Option A — subscription validity is a prerequisite for delegation validity.
+## Q14: Cross-Provider Routing
 
----
+How should a Client or broker route among separately authorized Provider grants without implying cross-provider transferability of units?
 
-## Q6: Competitive Neutrality
+## Q15: OpenTelemetry Mapping
 
-**Question:** Should ABDS specify that AI providers must not discriminate against ABDS-delegated calls (e.g. by throttling delegated calls relative to direct API calls)?
+When emerging Generative AI semantic conventions stabilize, should ABDS register a formal mapping for request, attempt, route, model, tokens, latency, and outcome?
 
-**Context:** A provider could implement ABDS but make delegated calls second-class citizens to protect API revenue.
+## Q16: Accounting Retention and Privacy Erasure
 
-**Open:** Needs a non-discrimination clause in the spec or governance model.
+How should Providers reconcile immutable economic records with privacy-law erasure, minimization, and retention requirements?
 
----
+## Q17: Provider Economics
 
-## Q7: Sponsored Funding Eligibility
-
-**Question:** Who should attest that a Beneficiary is eligible for a Sponsor program?
-
-**Options considered:**
-- A: The AI Provider verifies eligibility.
-- B: The Sponsor attests eligibility.
-- C: A trusted external verifier issues a privacy-preserving credential.
-- D: The Client attests eligibility subject to audit and fraud controls.
-
-**Open:** Different programs may require different trust models. The standard should avoid forcing sensitive eligibility data into OAuth requests.
-
----
-
-## Q8: Sponsor Reporting and Privacy
-
-**Question:** What is the minimum useful Sponsor report that does not become user surveillance?
-
-**Current lean:** Aggregate units, active Beneficiary counts, grant lifecycle totals, and model or operation categories. No prompts, outputs, files, conversation history, or identity by default.
-
-**Open:** Should ABDS define minimum cohort sizes or privacy thresholds?
-
----
-
-## Q9: Multiple Funding Sources
-
-**Question:** Can one grant draw from several Funding Principals?
-
-**Options considered:**
-- A: One grant always resolves to one funding source at execution time.
-- B: A grant contains an ordered list of already-authorized sources.
-- C: The Provider can split one execution across sources.
-
-**Current lean:** Option A for the first implementation. It produces the clearest consent, accounting, error, and revocation semantics.
-
----
-
-## Q10: Sponsorship Policy Changes
-
-**Question:** Which program changes require renewed consent?
-
-**Current lean:** Higher caps, broader models or operations, paid overage, a new Funding Principal, broader Sponsor data visibility, and material duration extensions require renewed consent. Reductions require notification when they affect expected service.
-
----
-
-## Q11: Authorization Details Identifier
-
-**Question:** What collision-resistant identifier and registration path should ABDS use for its Rich Authorization Request type?
-
-**Open:** The current `abds_ai_delegation` value is explicitly a draft placeholder.
-
----
-
-## Q12: Cross-Provider Continuity
-
-**Question:** Should ABDS define a future mechanism for a Client to handle several separately authorized Provider and funding-source grants?
-
-**Open:** Cross-provider portability of units is out of scope, but Client routing among independent grants may be useful.
+What pricing, fraud, support, cannibalization, and subscription-allocation constraints would make Providers accept or reject ABDS?
