@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:abds:schema:ledger-event:0.5",
+  "title": "ABDS Ledger Event v0.5",
+  "description": "Immutable reservation, settlement, release, denial, expiry, or adjustment event.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "ledger_event_id",
+    "event_type",
+    "occurred_at",
+    "delegation_id",
+    "client_id",
+    "request_id",
+    "unit_type",
+    "quantity",
+    "funding_source_type",
+    "funding_bucket_ref"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.5"},
+    "ledger_event_id": {"type": "string", "minLength": 8, "maxLength": 200},
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "reservation_created",
+        "reservation_released",
+        "reservation_expired",
+        "settlement_posted",
+        "adjustment_posted",
+        "execution_denied"
+      ]
+    },
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "delegation_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "client_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "request_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "reservation_id": {"type": "string", "maxLength": 200},
+    "settlement_id": {"type": "string", "maxLength": 200},
+    "usage_event_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "maxLength": 200}
+    },
+    "idempotency_key": {"type": "string", "maxLength": 255},
+    "unit_type": {"type": "string", "minLength": 1, "maxLength": 200},
+    "quantity": {"type": "number"},
+    "funding_source_type": {
+      "type": "string",
+      "enum": [
+        "user_entitlement",
+        "organization_budget",
+        "sponsor_budget",
+        "provider_promotion",
+        "developer_account"
+      ]
+    },
+    "funding_bucket_ref": {"type": "string", "minLength": 1, "maxLength": 200},
+    "price_snapshot_id": {"type": "string", "maxLength": 200},
+    "amount": {"$ref": "#/$defs/money"},
+    "reason_code": {"type": "string", "maxLength": 200},
+    "adjusts_ledger_event_id": {"type": "string", "maxLength": 200},
+    "actor_type": {
+      "type": "string",
+      "enum": ["provider", "client", "resource_user", "economic_authorizer", "automated_policy"]
+    },
+    "metadata": {"type": "object"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"event_type": {"const": "reservation_created"}}},
+      "then": {"required": ["reservation_id", "idempotency_key"]}
+    },
+    {
+      "if": {"properties": {"event_type": {"enum": ["reservation_released", "reservation_expired"]}}},
+      "then": {"required": ["reservation_id"]}
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "settlement_posted"}}},
+      "then": {"required": ["settlement_id", "idempotency_key", "usage_event_ids"]}
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "adjustment_posted"}}},
+      "then": {"required": ["adjusts_ledger_event_id", "reason_code", "actor_type"]}
+    }
+  ],
+  "$defs": {
+    "money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "currency"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        }
+      }
+    }
+  }
+}
