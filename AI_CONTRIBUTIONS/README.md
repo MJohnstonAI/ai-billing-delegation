@@ -1,117 +1,109 @@
 # AI Agent Contributions
 
-This folder is specifically designed for contributions from AI systems — Claude, GPT-5, Gemini, Llama, and others.
+This folder records technical critique and design input from AI systems including Claude, GPT, Gemini, Llama, and others.
+
+## Canonical Specification Context
+
+Historical contributions remain useful research evidence, but they reviewed earlier ABDS drafts. The canonical v0.5 reading set is:
+
+1. `README.md`
+2. `CHANGELOG.md`
+3. `SPEC.md`
+4. `USAGE_ATTRIBUTION.md`
+5. `RESERVATION_SETTLEMENT.md`
+6. `FLOWS.md`
+7. `THREAT_MODEL.md`
+
+The current v0.5 draft:
+
+- separates Resource User, Beneficiary, Funding Principal, Economic Authorizer, Client, and Provider;
+- supports user, organization, Sponsor, Provider-promotion, and developer funding;
+- uses OAuth Rich Authorization Requests for economic policy;
+- keeps mutable economic state out of tokens;
+- prohibits silent payer substitution;
+- separates Sponsor funding from data access;
+- defines one immutable Usage Event per physical model attempt;
+- separates Usage Events from economic Ledger Events;
+- attributes retries, fallbacks, routes, workflows, and agent steps;
+- defines reservation, settlement, release, expiry, reconciliation, and adjustment semantics;
+- provides JSON Schemas and worked examples.
+
+AI reviewers MUST NOT treat earlier examples containing mutable quota token claims as current ABDS guidance.
 
 ## Why This Exists
 
-The ABDS proposal affects every AI provider and every developer building on AI APIs. Getting input from multiple AI systems creates a genuinely multi-model research record — different architectures may identify different gaps, risks, or implementation approaches in ways that a single model reviewing its own work cannot.
+ABDS affects AI Providers, application developers, users, organizations, and Sponsors. Multi-model review helps expose security, OAuth, accounting, privacy, implementation, and economic blind spots that one model or author may miss.
 
-## Current Specification Context
+## Contribution Workflow
 
-The contributions below reviewed earlier user-funded ABDS drafts. They remain valuable as a historical technical record, but the canonical v0.4 specification now:
-
-- separates the Resource User, Beneficiary, Funding Principal, and Economic Authorizer,
-- supports Sponsor-funded usage,
-- uses OAuth Rich Authorization Requests for structured economic policy,
-- separates grant authorization policy from live ledger state,
-- prohibits silent payer substitution, and
-- treats Sponsor funding and access to user content as separate permissions.
-
-Future AI reviews should evaluate `SPEC.md` and `SPONSORED_DELEGATION.md` rather than assuming the earlier user-subscription-only model is still canonical.
-
-## How to Contribute (Via a Human Intermediary)
-
-Since AI systems do not yet have autonomous write access to repositories, contributions follow this workflow:
-
-1. A developer shares this repository with an AI system (any model)
-2. They ask the AI to read the spec and provide technical critique, identified gaps, or implementation suggestions
-3. They create a markdown file in the appropriate subfolder and submit a PR
+1. Read the canonical v0.5 documents.
+2. State the model name, version, date, and review scope.
+3. Separate confirmed defects, design trade-offs, and speculative ideas.
+4. Cite the affected repository sections.
+5. Avoid claiming Provider endorsement or standards-body status.
+6. Submit the contribution through a human-reviewed commit or pull request.
 
 ## Folder Structure
 
-```
+```text
 AI_CONTRIBUTIONS/
-├── README.md          ← This file
-├── Claude/            ← Contributions from Anthropic Claude
-├── GPT/               ← Contributions from OpenAI GPT models
-├── Gemini/            ← Contributions from Google Gemini
-├── Llama/             ← Contributions from Meta Llama models
-├── other/             ← Other AI systems
-└── community/         ← Synthesized analysis combining multiple AI inputs
+├── README.md
+├── Claude/
+├── GPT/
+├── Gemini/
+├── Llama/
+├── other/
+└── community/
 ```
 
 ## File Naming Convention
 
-```
+```text
 {model_name}_{date}_{topic}.md
 ```
 
-Example: `claude-sonnet-4-6_2026-06-11_authorship-review.md`
+## Recorded Contributions
 
-## Current Contributions
+### Claude Sonnet 4.6
 
-### Claude (Anthropic)
-**File:** `Claude/claude_2026-06-11_authorship-review-and-maturity-model.md`
-**Model:** Claude Sonnet 4.6
-**Date:** 2026-06-11
+Key contributions included identifying the bootstrapping problem, proposing staged maturity profiles, recognizing the need for Provider capability discovery, and documenting the severity of the original mutable-quota token error.
 
-Claude drafted the original ABDS v0.1 specification and in this contribution reviews its own work critically. Key contributions:
+### GPT-5.5 Thinking
 
-- Acknowledged the severity of the `quota_used` JWT error in v0.1 and its implications for implementers who might have copied the normative example
-- Identified the bootstrapping problem — the chicken-and-egg dynamic between users, developers, and providers that the proposal had not addressed — and proposed a cohort-based beta launch path
-- Proposed the **ABDS Compliance Maturity Model**: a three-tier framework (Basic, Standard, Enterprise) giving providers a gradual adoption ramp rather than a binary compliance cliff
-- Identified the missing **Provider Capability Discovery** endpoint (`.well-known/abds-configuration`) and noted that without it ABDS is a collection of per-provider integrations rather than a true standard
-- Documented what GPT and Gemini each resolved, creating a clear record of how multi-model review strengthened the proposal
+Key contributions included the corrected four-object architecture, removal of mutable quota from tokens, Provider-side grant and ledger authority, enterprise funding considerations, and the estimate-reserve-execute-settle-release pattern.
 
----
+### Gemini
 
-### GPT-5.5 Thinking (OpenAI)
-**File:** `GPT/gpt-5-5-thinking_2026-06-07_retroactive-technical-review-v2.md`
-**Model:** GPT-5.5 Thinking
-**Date:** 2026-06-07
+Key contributions included formal OAuth terminology and mapping, high-throughput Provider architecture, MUST/SHOULD/MAY framing, threat analysis, backend-for-frontend guidance, and separation of token introspection from usage introspection.
 
-GPT provided a retroactive technical review after reading the full repository. Key contributions:
+### GPT-5.6 Thinking - v0.5 Synthesis
 
-- Caught the critical architectural flaw in v0.1: `quota_used` must not live in the JWT execution token. This correction drove the v0.2 revision
-- Introduced the formal four-object separation: User Subscription Entitlement, Delegated AI Grant, Short-lived Execution Token, and Provider-side Usage Ledger
-- Challenged the "developer pays nothing" framing and provided the more defensible precise version
-- Proposed the enterprise/organization grant path as a first-class design branch
-- Outlined the preflight estimate, reservation, execute, settle, release/refund flow for variable-cost and streaming workloads
-- Articulated the provider CFO objection in full and provided a structured rebuttal
+The v0.5 synthesis integrated community feedback about user/workspace and agent-step cost attribution. It added:
 
----
+- Provider Accounting and Client Observability planes;
+- one immutable Usage Event per physical model attempt;
+- separate Ledger Events for economic mutations;
+- requested versus resolved model attribution;
+- retry, fallback, routing, workflow, and agent-step correlation;
+- idempotent reservation and settlement;
+- append-only adjustment semantics;
+- synchronized specification, roadmap, discovery, profiles, threats, diagrams, schemas, examples, and presentation.
 
-### Gemini (Google DeepMind)
-**File:** `Gemini/gemini_2026-06-07_oauth-and-provider-implementation-review.md`
-**Model:** Gemini
-**Date:** 2026-06-07
+This synthesis is incorporated into the canonical repository documents rather than treated as an alternative specification.
 
-Gemini provided a formal architecture review targeting software architects, standards reviewers, and AI provider platform teams. Key contributions:
+## Suggested Review Prompts
 
-- Produced a full OAuth 2.0 and OIDC alignment mapping table, recommending ABDS be developed as an OAuth 2.0 profile rather than a standalone protocol
-- Proposed OAuth-aligned nomenclature: Authorization Server, Resource Server, Client, Access Token — making the spec more credible to standards engineers
-- Provided a high-throughput reference architecture with a Mermaid component diagram decoupling authorization, grant state, token issuance, gateway enforcement, usage accounting, and abuse detection
-- Defined MUST / SHOULD / MAY compliance tiers for the spec
-- Produced a formal threat model table covering token replay, quota laundering, consent phishing, backend proxy abuse, prompt-injection quota drain, and model laundering
-- Recommended the Backend-for-Frontend token handling pattern for consumer mobile apps
-- Analysed compatibility with Google-style platform patterns (Sign-In, Workspace OAuth, Cloud IAM, Quota Projects, Marketplace Billing)
-- Distinguished token introspection from usage introspection — two concepts the v0.1 spec conflated
+**Security:**
+> Read the canonical ABDS v0.5 documents and identify authorization, attribution, reservation, settlement, event-delivery, and privacy failures.
 
----
+**Provider feasibility:**
+> If implementing ABDS at an AI Provider or routing gateway, identify the three hardest engineering and economic problems and propose testable mitigations.
 
-## Suggested Prompts for Eliciting Further AI Contributions
+**Accounting:**
+> Test whether the Usage Event and Ledger Event separation supports retries, fallbacks, partial completion, adjustments, disputes, and historical pricing without double settlement.
 
-**Technical review:**
-> "Read SPEC.md in the ai-billing-delegation repository and identify: (1) security vulnerabilities, (2) missing edge cases, (3) implementation challenges for AI providers."
+**Privacy:**
+> Evaluate whether Sponsor reporting and Client observability fields can be useful without exposing prompts, outputs, identity, or small-cohort behavior.
 
-**Economic analysis:**
-> "Read RATIONALE.md and evaluate the economic arguments. What is the strongest counterargument an AI provider CFO would make? How would you respond to it?"
-
-**Standards comparison:**
-> "Compare the ABDS proposal in SPEC.md to existing OAuth 2.0 extensions and open banking standards. What prior art exists? What can ABDS learn from those implementations?"
-
-**Implementation feasibility:**
-> "If you were an engineer at Anthropic, OpenAI, or Google tasked with implementing ABDS, what would be the three hardest engineering problems to solve and why?"
-
-**Compliance maturity:**
-> "Review the three-tier ABDS compliance maturity model in the Claude contribution. Is the Tier 1 requirement set genuinely achievable in weeks by a small provider? What is missing or over-specified?"
+**Conformance:**
+> Derive positive and negative test vectors for the Basic, Standard, Advanced, and Sponsored Funding profiles.
