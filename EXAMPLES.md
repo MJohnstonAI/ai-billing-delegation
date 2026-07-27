@@ -25,15 +25,15 @@ Validate against:
 schemas/abds-usage-event-v0.5.schema.json
 ```
 
-## 2. Reservation, Settlement, and Release Sequence
+## 2. Reservation and Settlement Sequence
 
 File: [`examples/reservation-settlement-sequence.json`](examples/reservation-settlement-sequence.json)
 
 Demonstrates:
 
 1. a five-unit reservation;
-2. a three-unit settlement linked to the Usage Event;
-3. release of the unused two units;
+2. one terminal settlement posting three consumed units;
+3. the same settlement releasing the unused two units through `released_quantity`;
 4. stable request, reservation, settlement, and idempotency identifiers;
 5. one consistent Sponsor funding bucket and price snapshot.
 
@@ -42,6 +42,8 @@ Each array member validates against:
 ```text
 schemas/abds-ledger-event-v0.5.schema.json
 ```
+
+A reservation has one terminal finalization. A full `reservation_released` event is used when no settlement occurs; an idempotent settlement can account for both consumed and unused reserved quantity in one finalization.
 
 ## 3. Logical Request With Several Physical Attempts
 
@@ -56,34 +58,35 @@ Every billable physical attempt produces a separate Usage Event. One idempotent 
 
 ## 4. Direct Debit Without Reservation
 
-A predictable low-cost operation may be directly debited when Provider policy permits it. It still requires:
-
-- Provider-measured usage;
-- a Usage Event;
-- a Ledger Event;
-- one funding bucket;
-- idempotent economic processing;
-- no silent payer substitution.
+A predictable low-cost operation may be directly debited when Provider policy permits it. It still requires Provider-measured usage, a Usage Event, a Ledger Event, one funding bucket, idempotent processing, and no silent payer substitution.
 
 ## 5. Adjustment Instead of Historical Rewrite
 
 When a Provider corrects a charge, the original event remains unchanged. A new `adjustment_posted` Ledger Event references the prior event, reason, actor, and positive or negative quantity.
 
-## 6. Negative Test Cases for Future Conformance Suite
+## 6. Negative Test Cases
 
 Implementations should reject or flag:
 
 - missing `delegation_id`, `request_id`, or `attempt_id`;
 - duplicate settlement identifiers;
-- one reservation reaching two terminal states;
+- one reservation receiving two terminal finalizations;
 - settlement against a different funding bucket from the reservation;
+- settled plus released quantity exceeding the reservation;
 - `settled_quantity` exceeding the authorized envelope without overage consent;
 - Client attribution containing prompt text, secrets, emails, or customer names;
 - a fallback model outside the approved model scope;
 - a second payer selected after funding exhaustion without authorization;
-- an adjustment that does not reference an earlier ledger event;
+- an adjustment that does not reference an earlier Ledger Event;
 - event retrieval across another grant.
 
-## 7. Validation Requirements
+## 7. Automated Validation
 
-A repository validation script should perform JSON Schema Draft 2020-12 validation and then enforce cross-event invariants that JSON Schema alone cannot express, including terminal-state uniqueness, settlement idempotency, funding-bucket consistency, and reservation arithmetic.
+Run:
+
+```text
+python -m pip install jsonschema
+python scripts/validate_examples.py
+```
+
+The GitHub Actions workflow `.github/workflows/validate-abds-v0.5.yml` validates JSON Schema Draft 2020-12 conformance and cross-event invariants on changes to schemas, examples, or the validator.
