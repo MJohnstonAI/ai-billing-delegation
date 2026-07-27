@@ -1,67 +1,49 @@
-# ABDS Technical Specification v0.4 (Draft)
+# ABDS Technical Specification v0.5 (Draft)
 
 ## Abstract
 
-This document specifies the AI Billing Delegation Standard (ABDS), an OAuth-aligned profile for bounded, provider-enforced AI resource consumption.
+The AI Billing Delegation Standard (ABDS) is an OAuth-aligned profile for bounded, provider-enforced AI resource funding and consumption. ABDS separates the Resource User, Beneficiary, Consumer Application, Funding Principal, Economic Authorizer, and AI Provider.
 
-ABDS separates the Resource User, Consumer Application, Funding Principal, Economic Authorizer, and AI Provider. The Funding Principal may be the user, an organization, a sponsor, an AI provider promotion, or the developer. This payer-neutral model allows a donor or membership organization, for example, to fund NatureGuard usage without charging the user or application developer.
+The v0.5 architecture combines a Provider-maintained Delegated AI Grant with short-lived Execution Tokens, immutable Usage Events, and an authoritative economic ledger. ABDS is not a new authentication protocol, payment rail, universal AI currency, or claim of Provider adoption.
 
-ABDS does not define a new authentication protocol or a payment rail. It profiles modern OAuth patterns and adds AI-specific grant, funding, accounting, consent, and revocation semantics.
+The terms **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY** are used as described by RFC 2119 and RFC 8174.
 
 ## 1. Motivation
 
-Consumer AI applications face a structural funding problem:
+Consumer AI applications face recurring structural problems:
 
-- AI API costs are normally billed to the developer.
-- Developer-funded growth can create immediate and unpredictable liability.
-- Bring Your Own Key is unsuitable for ordinary consumers.
-- Custom credits, paywalls, and metering systems must be rebuilt by every application.
-- A user may have an AI subscription but no safe way to authorize bounded app usage.
-- A sponsor, employer, university, or donor may want to fund access but has no interoperable way to do so without becoming the application operator.
+- inference costs normally accrue to the developer before revenue is proven;
+- Bring Your Own Key is unsuitable for most consumers;
+- every app rebuilds credits, quotas, metering, and abuse controls;
+- users and organizations lack a safe way to authorize bounded third-party AI use;
+- Sponsors may want to fund access without operating the application; and
+- Provider invoices do not identify which user, workspace, feature, workflow, route, retry, agent step, or physical model attempt caused cost.
 
-ABDS treats funding as a delegated authorization problem. The aim is not free compute; it is an explicit, bounded, auditable decision about whose provider-recognized entitlement or budget funds a particular Client and Beneficiary.
+ABDS treats funding and metered execution as a delegated authorization and accounting problem.
 
-When an active grant is funded by a user or Sponsor, the developer does not pay the provider's inference cost for covered calls. The developer remains responsible for application infrastructure, storage, orchestration, monitoring, support, abuse prevention, and all usage outside the grant.
-
-## 2. Terminology
+## 2. Roles and Objects
 
 | Term | Definition |
 |---|---|
-| **AI Provider** | Entity offering AI inference and operating the relevant Authorization Server, Resource Server, grant service, and Usage Ledger. |
-| **Authorization Server (AS)** | OAuth server that authenticates parties, obtains consent, creates grants, and issues credentials. |
-| **Resource Server (RS)** | AI API or gateway that validates tokens and enforces grant and ledger state. |
+| **Provider** | AI Provider operating or controlling the Authorization Server, Resource Server, grant service, execution gateway, and accounting system. |
 | **Resource User** | Person using the AI-enabled Client. |
-| **Beneficiary** | Person or eligible class permitted to consume an allocation. Usually the Resource User. |
-| **Consumer Application / Client** | Registered application requesting and using an ABDS grant. |
-| **Funding Principal** | Party whose provider-recognized entitlement or budget is charged. |
-| **Economic Authorizer** | Party authorized to commit the Funding Principal's resources. |
+| **Beneficiary** | Person or eligible class permitted to consume an allocation. |
+| **Client** | Registered Consumer Application requesting and using an ABDS grant. |
+| **Funding Principal** | Party whose Provider-recognized entitlement or budget is charged. |
+| **Economic Authorizer** | Party permitted to commit the Funding Principal's resources. |
 | **Sponsor** | Funding Principal other than the Resource User or application developer. |
-| **Funding Entitlement or Budget** | Provider-recognized source of resource units or monetary budget. |
-| **Delegated AI Grant** | Provider-maintained authorization binding a Client, Beneficiary, funding source, limits, scopes, status, and consent. |
+| **Delegated AI Grant** | Provider-maintained authorization binding Client, Beneficiary, funding source, limits, scopes, status, and consent. |
 | **Execution Token** | Short-lived OAuth access token referencing `delegation_id`. |
-| **Usage Ledger** | Provider-authoritative accounting record for reservations, debits, settlements, releases, denials, and resets. |
-| **Quota Cap** | Maximum resource consumption permitted by a grant for a period. |
-| **delegation_id** | Stable public ABDS grant reference used in tokens, usage views, logs, and revocation events. |
-| **funding_source_id** | Opaque provider-side reference to the charged entitlement or budget. It is not a bearer-token claim. |
+| **Logical Request** | One Client-level operation. |
+| **Physical Model Attempt** | One actual Provider or upstream execution attempt, including retry, fallback, speculative, safety, or routing calls. |
+| **Usage Event** | Immutable Provider record of what technically occurred for one physical attempt. |
+| **Ledger Event** | Immutable Provider record of an economic transition such as reservation, settlement, release, expiry, denial, or adjustment. |
+| **Reservation** | Temporary Provider-authoritative hold against a grant and funding bucket. |
+| **Settlement** | Final Provider-authoritative debit for measured consumption. |
+| **delegation_id** | Stable public grant reference used in tokens, usage views, events, logs, and revocation. |
+| **funding_bucket_ref** | Opaque Provider-side reference to the charged entitlement or budget bucket; never a bearer credential. |
 
-## 3. Protocol Overview
-
-ABDS uses:
-
-- OAuth 2.0 Authorization Code Flow,
-- PKCE for public clients,
-- OAuth 2.0 Rich Authorization Requests for structured economic authorization,
-- provider-maintained Delegated AI Grants,
-- short-lived Execution Tokens referencing `delegation_id`,
-- a provider-authoritative Usage Ledger,
-- usage-status and revocation interfaces,
-- optional OAuth Token Exchange,
-- optional OAuth Resource Indicators, and
-- risk-based sender-constrained tokens.
-
-OAuth scopes MAY express coarse rights. The structured cap, period, operations, model policy, funding offer, and overage behavior SHOULD be carried in `authorization_details`.
-
-### 3.1 Payer-Neutral Four-Object Model
+## 3. Core Architecture
 
 ```text
 Funding Entitlement or Budget
@@ -69,154 +51,99 @@ Funding Entitlement or Budget
 Delegated AI Grant
         | referenced by
 Short-lived Execution Token
-        | consumption recorded in
-Provider-side Usage Ledger
+        | authorizes
+Provider Execution
+        |-> Usage Event Plane
+        |-> Economic Ledger Plane
 ```
 
-This separation is mandatory.
+The Provider Accounting Plane is authoritative. Client attribution is untrusted observability metadata and MUST NOT alter grant policy, measured usage, billed quantity, or funding-source selection.
 
-The Execution Token identifies and constrains the delegation. It MUST NOT be the source of truth for live usage, remaining quota, cap, reset time, Sponsor pool balance, or funding-settlement state.
+The Execution Token MUST NOT be the source of truth for live usage, remaining quota, reset time, Sponsor balance, reservation state, price, or settlement state.
 
-### 3.2 Funding Source Types
+### 3.1 Funding Source Types
 
 Providers SHOULD support one or more of:
 
-| Type | Funding Principal |
-|---|---|
-| `user_entitlement` | Individual subscriber or account holder |
-| `organization_budget` | Employer, university, government, or other organization |
-| `sponsor_budget` | Donor, foundation, membership organization, or patronage program |
-| `provider_promotion` | AI Provider-funded allowance |
-| `developer_account` | Traditional developer-paid usage |
+- `user_entitlement`
+- `organization_budget`
+- `sponsor_budget`
+- `provider_promotion`
+- `developer_account`
 
-Support for a type MUST be advertised through provider discovery metadata.
+Supported types MUST be advertised through Provider discovery.
 
-ABDS does not require the Provider to reveal the commercial settlement mechanism behind a funding source.
+## 4. OAuth Profile
 
-## 4. Delegated AI Grant
+ABDS uses or profiles:
 
-The Provider MUST maintain a server-side grant for every active delegation.
+- OAuth Authorization Code Flow;
+- PKCE with `S256` for public Clients;
+- Rich Authorization Requests for cap, period, model, operation, funding offer, and overage policy;
+- Pushed Authorization Requests for sensitive or high-value authorization;
+- Token Exchange where useful for short-lived, audience-specific execution credentials;
+- Resource Indicators for target API binding; and
+- DPoP, mTLS, or equivalent sender constraint for elevated-risk grants.
 
-### 4.1 Grant Authorization Policy
+Until a registered identifier exists, `abds_ai_delegation` is a draft placeholder authorization-details type.
 
-| Field | Type | Description |
-|---|---|---|
-| `delegation_id` | string | Stable public ABDS reference |
-| `grant_id` | string | Optional provider-internal record identifier |
-| `beneficiary_subject` | string | Provider-side user or pseudonymous Beneficiary reference |
-| `app_client_id` | string | Bound Client identifier |
-| `funding_source_type` | enum | Funding type from Section 3.2 |
-| `funding_source_id` | string | Opaque provider-side funding reference |
-| `economic_authorizer_type` | enum | `user`, `organization_admin`, `sponsor_policy`, `provider_policy`, or `developer` |
-| `sponsorship_program_id` | string | Optional public Sponsored Delegation Profile reference |
-| `unit_type` | string | Provider-defined resource-unit identifier |
-| `quota_cap` | integer | Maximum units for the grant period |
-| `quota_period` | string | `daily`, `weekly`, `monthly`, or provider-defined period |
-| `per_request_cap` | integer | Optional maximum for a single execution |
-| `model_scope` | array | Permitted model classes or families |
-| `operation_scope` | array | Permitted operations |
-| `overage_policy` | enum | `prohibited` or explicitly authorized provider-defined behavior |
-| `status` | enum | `active`, `paused`, `revoked`, `exhausted`, or `expired` |
-| `created_at` | ISO 8601 | Creation time |
-| `expires_at` | ISO 8601 | Optional grant expiry |
-| `updated_at` | ISO 8601 | Last authorization-policy or lifecycle update |
-
-`quota_used`, `quota_remaining`, reserved units, Sponsor pool balance, and settlement state are ledger values. They MUST NOT be treated as grant-policy fields or token claims.
-
-### 4.2 Lifecycle
-
-```text
-created -> active -> paused
-                  -> exhausted
-                  -> revoked
-                  -> expired
-```
-
-Lifecycle and ledger transitions MUST be enforced atomically or through a mechanism providing equivalent protection against overspend.
-
-## 5. Authorization Request
-
-### 5.1 Rich Authorization Details
-
-ABDS SHOULD define a registered Rich Authorization Request type. Until a collision-resistant identifier and registration path are selected, this draft uses `abds_ai_delegation` as a placeholder.
-
-Illustrative authorization details:
+Illustrative authorization detail:
 
 ```json
-[
-  {
-    "type": "abds_ai_delegation",
-    "actions": ["ai.execute", "ai.usage.read"],
-    "locations": ["https://api.provider.example"],
-    "models": ["standard-text"],
-    "budget": {
-      "max_units": 100,
-      "unit_type": "provider_ai_unit",
-      "period": "monthly",
-      "per_request_max_units": 5,
-      "overage": "prohibited"
-    },
-    "funding_offer_id": "offer_natureguard_public_2026"
-  }
-]
+{
+  "type": "abds_ai_delegation",
+  "actions": ["ai.execute", "ai.usage.read"],
+  "locations": ["https://api.provider.example"],
+  "models": ["standard-text"],
+  "budget": {
+    "max_units": 100,
+    "unit_type": "provider_ai_unit",
+    "period": "monthly",
+    "per_request_max_units": 5,
+    "overage": "prohibited"
+  },
+  "funding_offer_id": "offer_natureguard_public_2026"
+}
 ```
 
-`funding_offer_id` is optional. Its presence requests a funding source already made available to the Client or Beneficiary, such as a Sponsorship Program. The Client MUST NOT be allowed to name an arbitrary provider funding account.
+A Client MUST NOT name an arbitrary Provider funding account. The Authorization Server MUST validate the Client, redirect URI, funding offer, Beneficiary eligibility, requested limits, and effective Funding Principal.
 
-The AS MUST:
-
-- reject unknown or malformed authorization details,
-- validate the Client and redirect URI,
-- validate the funding offer and Client eligibility,
-- ensure the request does not exceed funding or provider policy,
-- permit the Resource User or Provider to lower the requested cap,
-- present the effective authorization to the user, and
-- bind the resulting grant to the Client, Beneficiary, and funding source.
-
-### 5.2 OAuth Request
-
-```text
-GET https://auth.provider.example/oauth/authorize
-  ?response_type=code
-  &client_id={app_client_id}
-  &redirect_uri={registered_redirect_uri}
-  &state={csrf_value}
-  &code_challenge={pkce_challenge}
-  &code_challenge_method=S256
-  &authorization_details={url_encoded_json}
-```
-
-Public clients MUST use PKCE with `S256`. Confidential clients SHOULD use PKCE unless equivalent or stronger authorization-code injection defenses are in place.
-
-Pushed Authorization Requests SHOULD be used for large, sensitive, high-cap, or sponsor-eligibility-bearing requests.
-
-## 6. Authorization and Consent
+## 5. Consent
 
 The Provider MUST display:
 
-- verified Client and developer identity,
-- Resource User account or Beneficiary context,
-- Funding Principal identity or plain-language funding-source type,
-- the statement of who pays for covered usage,
-- quota cap, unit type, period, and per-request cap where applicable,
-- permitted model classes and operations,
-- overage behavior,
-- program expiry or renewal behavior,
-- what happens when funding is exhausted,
-- what the Client can access,
-- what a Sponsor can see,
-- a revocation path, and
-- warnings for unverified or high-risk Clients.
+- verified Client identity;
+- Beneficiary or Resource User context;
+- who pays;
+- cap, unit, period, and per-request limit;
+- permitted model classes and operations;
+- overage and exhaustion behavior;
+- expiry or renewal behavior;
+- Client and Sponsor data visibility; and
+- revocation controls.
 
-For sponsored grants, consent MUST state that sponsorship alone does not give the Sponsor access to prompts or outputs.
+The Resource User or Provider MUST be able to reduce the requested cap before approval. Sponsor funding MUST NOT imply Sponsor access to prompts, outputs, files, conversations, or identity.
 
-The Provider MUST NOT silently select a personal funding source when a sponsored request fails.
+## 6. Delegated AI Grant
+
+The Provider MUST maintain a server-side grant for every active delegation. The grant SHOULD include:
+
+- `delegation_id` and optional internal `grant_id`;
+- Beneficiary and Client bindings;
+- funding-source type and internal funding reference;
+- Economic Authorizer type;
+- unit type, cap, period, and optional per-request cap;
+- model and operation scope;
+- overage policy;
+- status, creation, update, and expiry times.
+
+Live used, remaining, reserved, and settled quantities are accounting state, not immutable grant-policy fields or token claims.
+
+Grant and accounting transitions MUST be atomic or provide equivalent protection against overspend and double settlement.
 
 ## 7. Execution Token
 
-The token MUST contain standard OAuth information and `delegation_id`. It MUST be short-lived, audience-restricted, and scoped.
-
-Illustrative claims:
+An Execution Token MUST be short-lived, audience-restricted, scoped, bound to the Client, and reference `delegation_id`.
 
 ```json
 {
@@ -230,248 +157,227 @@ Illustrative claims:
   "delegation_id": "del_abc123",
   "scope": "ai.execute ai.usage.read",
   "model_scope": ["standard-text"],
-  "abds_version": "0.4"
+  "abds_version": "0.5"
 }
 ```
 
-The token MUST NOT contain:
+The token MUST NOT contain live quota, reset, funding-source identifier, Sponsor balance, reservation, price, or settlement state. Token claims MAY only narrow Provider-side policy.
 
-- `quota_cap`,
-- `quota_used`,
-- `quota_remaining`,
-- `quota_period`,
-- `quota_reset`,
-- `funding_source_id`,
-- Sponsor pool balance, or
-- settlement or payment state.
+## 8. Execution Enforcement
 
-The Provider MAY omit `model_scope` from the token and resolve it from the grant. When present, it MUST only narrow the provider-side grant.
-
-## 8. Token Issuance
-
-Providers MAY issue an Execution Token during the authorization-code exchange.
-
-Providers SHOULD consider OAuth Token Exchange where the Client first receives a credential representing the durable grant and later requests a short-lived token for a specific Resource Server.
-
-Providers MAY require DPoP, mTLS, or another sender-constraining mechanism for higher-risk Clients, higher caps, organizational or sponsored grants, or agentic workloads.
-
-## 9. API Enforcement
-
-For each request, the Provider MUST:
+For each logical request, the Provider MUST:
 
 1. validate token signature, issuer, expiry, audience, Client binding, and scope;
 2. resolve `delegation_id`;
-3. validate grant and funding-source status;
-4. validate the Beneficiary, model, operation, and per-request policy;
-5. check grant and funding-source availability against the ledger;
-6. reserve or debit usage atomically;
-7. execute only within the authorized envelope; and
-8. settle actual usage.
+3. validate grant, Beneficiary, model, operation, and funding status;
+4. enforce cap, per-request, model, tool, route, and agentic limits;
+5. assign or validate a stable `request_id` and unique `attempt_id`;
+6. account for settled usage and active reservations;
+7. reserve or debit atomically;
+8. execute only inside the authorized envelope;
+9. measure usage authoritatively;
+10. emit Usage Events for physical attempts;
+11. post idempotent Ledger Events; and
+12. release unused reservations.
 
-The Client MUST implement its own session security, authorization, and rate limiting. Provider enforcement does not make an unauthenticated Client proxy safe.
+The Client remains responsible for its own session security, user authorization, tenancy isolation, and rate limiting.
 
-## 10. Usage Status
+## 9. Usage Event Profile
 
-The Provider MUST expose the Client's grant-specific usage state without revealing unrelated subscription or Sponsor information.
+Each billable Physical Model Attempt MUST be independently attributable. A successful logical response MUST NOT hide failed, retried, fallback, superseded, speculative, safety, or routing attempts that consumed billable resources.
 
-Illustrative endpoint:
+Usage Events SHOULD conform to `schemas/abds-usage-event-v0.5.schema.json` and include:
 
-```text
-GET https://api.provider.example/v1/abds/delegations/{delegation_id}/usage
-Authorization: Bearer {execution_token}
-```
+- schema and event identifiers;
+- Provider-recorded time;
+- `delegation_id`, Client, logical request, and physical attempt;
+- operation, Provider, requested model, and resolved model;
+- route, retry, and outcome context where applicable;
+- extensible usage dimensions;
+- funding-source type and opaque funding bucket;
+- optional pricing snapshot and monetary amount; and
+- optional opaque Client attribution.
 
-Illustrative response:
+The meaning and unit of each billable dimension MUST be published. Internal upstream cost and the amount charged to the Funding Principal MUST NOT be conflated.
 
-```json
-{
-  "delegation_id": "del_abc123",
-  "unit_type": "provider_ai_unit",
-  "quota_cap": 100,
-  "quota_used": 47,
-  "quota_remaining": 53,
-  "quota_period": "monthly",
-  "quota_reset": "2026-08-01T00:00:00Z",
-  "status": "active",
-  "funding_display": {
-    "type": "sponsor_budget",
-    "name": "Green Earth Foundation"
-  }
-}
-```
+See `USAGE_ATTRIBUTION.md` for the detailed profile.
 
-The Provider MUST authenticate and authorize access to this endpoint, bind the caller to the grant, and prevent cross-grant enumeration.
+## 10. Client Observability
 
-The response is a point-in-time view. Enforcement remains authoritative at execution time.
+The Client MAY provide opaque references for workspace, feature, workflow, agent run, agent step, experiment, trace, or span.
 
-## 11. Reservation and Settlement
+These fields MUST NOT contain prompts, outputs, secrets, email addresses, customer names, filenames, or raw identity. They MUST be treated as untrusted and MUST NOT change billing or funding selection.
 
-Providers SHOULD support reservation and settlement for streaming, multimodal, batch, or agentic operations with material variable cost:
+## 11. Ledger Event Profile
+
+Reservations, settlements, releases, expiry, denials, and adjustments SHOULD emit immutable Ledger Events conforming to `schemas/abds-ledger-event-v0.5.schema.json`.
+
+Initial event types are:
 
 ```text
-Estimate -> Reserve -> Execute -> Settle -> Release
+reservation_created
+reservation_released
+reservation_expired
+settlement_posted
+adjustment_posted
+execution_denied
 ```
 
-The Provider MUST define:
+Usage Events describe technical facts. Ledger Events describe economic state transitions. Accepted events MUST be append-only. Corrections MUST use a compensating adjustment referencing the original event, actor, and reason.
 
-- reservation expiry,
-- partial completion,
-- cancellation,
-- retry and idempotency behavior,
-- tool-call or step limits,
-- settlement after provider failure, and
-- release of unused reserved units.
+## 12. Reservation and Settlement
 
-## 12. Revocation and Funding Changes
+Providers SHOULD use reservation and settlement for streaming, multimodal, batch, agentic, routed, or otherwise variable-cost operations:
 
-The Resource User MUST be able to revoke the Client's grant.
+```text
+Authorize -> Estimate -> Reserve -> Execute -> Settle -> Release
+```
 
-The Economic Authorizer MUST be able to reduce or terminate future funding.
+A reservation MUST be atomically bound to one grant, Client, logical request, unit type, and funding bucket. It reaches at most one terminal state: settled, released, or expired.
 
-The Provider MUST be able to suspend abusive Clients, grants, or funding programs.
+Settlement MUST:
 
-After revocation, subsequent calls referencing the grant MUST fail.
+- use Provider-measured usage;
+- be idempotent;
+- reference billable Usage Events;
+- remain within the reservation unless overage was explicitly authorized;
+- retain the execution-time pricing snapshot when money is exposed; and
+- release unused capacity.
 
-The following changes require renewed consent from affected parties:
+A disconnect, cancellation, timeout, or partial response does not imply zero usage. See `RESERVATION_SETTLEMENT.md`.
 
-- a higher cap,
-- broader model or operation access,
-- paid overage,
-- a new Funding Principal,
-- broader Sponsor data visibility, or
-- a material extension beyond a disclosed program end.
+## 13. Accounting Invariants
 
-## 13. No Silent Payer Substitution
+Implementations MUST preserve:
 
-If the authorized funding source is unavailable, exhausted, expired, or revoked, the Provider and Client MUST NOT silently charge another party.
+1. Every settled quantity maps to exactly one `delegation_id` and funding bucket.
+2. One settlement identifier is accepted at most once.
+3. One reservation reaches at most one terminal state.
+4. Active reservations plus settled usage cannot exceed the authorized envelope except for explicit overage.
+5. Retries, fallbacks, and speculative attempts remain visible.
+6. Funding failure cannot silently move usage to another payer.
+7. Aggregate balances are reproducible from append-only events or an equivalent auditable log.
+8. Historical monetary amounts retain their pricing snapshot.
+9. Client attribution cannot alter measured usage or funding selection.
+10. Sponsor reporting cannot exceed the authorized privacy policy.
 
-The request MUST:
+## 14. Usage Status and Event Access
 
-- stop,
-- use another already-authorized funding source, or
-- obtain fresh authorization from the new Funding Principal and Resource User.
+The Provider MUST expose grant-specific usage status without revealing unrelated subscription, grant, or Sponsor information.
 
-This includes prohibiting silent fallback from Sponsor funding to the user's subscription or the developer's API account.
+Providers SHOULD support at least one of:
 
-## 14. Privacy
+- paginated grant-specific event retrieval;
+- signed webhook delivery;
+- asynchronous export; or
+- Provider console download.
 
-The Client MUST NOT receive:
+At-least-once delivery is acceptable. Consumers MUST deduplicate by stable event identifier. Retrieval and delivery MUST prevent cross-grant access, replay, and tampering.
 
-- the user's complete provider plan,
-- total provider usage,
-- other app grants,
-- payment method,
-- unrelated billing state,
-- the Sponsor's confidential pool balance, or
-- provider risk signals beyond what is required for recovery.
+## 15. Revocation and Funding Changes
 
-A Sponsor SHOULD receive aggregate program usage by default. Funding does not authorize access to prompts, outputs, conversation history, uploaded files, or user identity.
+The Resource User MUST be able to revoke the Client grant. The Economic Authorizer MUST be able to reduce or terminate future funding. The Provider MUST be able to suspend abusive Clients, grants, or programs.
 
-Broader data access requires separate, purpose-specific authorization and an independent legal basis.
+After revocation, new execution MUST fail. In-flight work MUST stop as soon as practical, settle consumed resources, and release unused reservation capacity.
 
-## 15. Security
+Higher caps, broader models or operations, paid overage, a new Funding Principal, broader Sponsor visibility, or a material duration extension require renewed consent.
 
-Providers MUST:
+## 16. No Silent Payer Substitution
 
-- follow current OAuth security best practice,
-- require exact redirect URI matching,
-- require PKCE for public clients,
-- enforce short token lifetimes,
-- validate audience and Client binding,
-- keep quota and funding state provider-side,
-- atomically enforce caps,
-- implement immediate revocation,
-- log usage by `delegation_id`,
-- prevent cross-grant usage introspection,
-- apply per-Client and per-grant rate limits, and
-- detect abusive aggregation and quota laundering.
+If authorized funding is unavailable, exhausted, expired, paused, or revoked, the Provider and Client MUST NOT silently charge another party.
 
-Providers SHOULD use:
+The request MUST stop, use another already-authorized source, or obtain fresh authorization from the new Funding Principal and affected Resource User.
 
-- PAR for sensitive or high-value authorization,
-- DPoP or mTLS for high-risk grants,
-- app verification,
-- consent receipts,
-- anomaly detection,
-- program circuit breakers, and
-- privacy-preserving sponsor reports.
+## 17. Privacy and Retention
 
-See `THREAT_MODEL.md` and `SPONSORED_DELEGATION.md`.
+ABDS requires data minimization. Usage Events MUST NOT require prompt or output content, raw user identity, workspace names, filenames, customer names, payment-card data, unrelated account usage, or Sponsor-confidential pool balances.
 
-## 16. Provider Discovery
+Providers SHOULD separate retention for accounting, disputes, security/fraud evidence, product telemetry, and optional debugging content. Sponsor reporting SHOULD be aggregate by default and use privacy thresholds where small cohorts create re-identification risk.
 
-Providers SHOULD advertise:
+## 18. Security
 
-- supported ABDS versions and profiles,
-- endpoints,
-- authorization-details type,
-- funding-source types,
-- supported unit types and periods,
-- model and operation scoping,
-- reservation support,
-- sponsor-program support,
-- sender-constrained token support, and
-- app verification requirements.
+Providers MUST follow current OAuth security practice and MUST:
+
+- require exact redirect URI matching and PKCE for public Clients;
+- use short token lifetimes and validate audience and Client binding;
+- keep economic state Provider-side;
+- atomically enforce caps and reservations;
+- implement immediate revocation;
+- prevent cross-grant enumeration;
+- apply per-Client and per-grant rate limits;
+- detect quota laundering and retry amplification;
+- deduplicate idempotent economic operations;
+- reject forged or cross-workspace attribution attempts; and
+- protect event delivery against replay and tampering.
+
+See `THREAT_MODEL.md`.
+
+## 19. Provider Discovery
+
+Providers SHOULD advertise supported versions, profiles, endpoints, authorization-details type, funding-source types, unit types, model/operation scope, Usage Event and Ledger Event schema versions, event delivery, reservation, reconciliation, Sponsor programs, sender-constrained tokens, and app-verification requirements.
 
 See `DISCOVERY.md`.
 
-## 17. Error Registry
+## 20. Error Registry
 
 | Code | HTTP | Meaning |
 |---|---:|---|
-| `abds_invalid_delegation` | 403 | Grant cannot be used for this Client, Beneficiary, audience, or resource |
+| `abds_invalid_delegation` | 403 | Grant is invalid for the Client, Beneficiary, audience, or resource |
 | `abds_token_expired` | 401 | Execution Token expired |
-| `abds_token_revoked` | 401 | Token or underlying grant revoked |
-| `abds_model_not_scoped` | 403 | Requested model not permitted |
-| `abds_operation_not_scoped` | 403 | Requested operation not permitted |
-| `abds_per_request_cap_exceeded` | 429 | Request exceeds its maximum resource envelope |
-| `abds_quota_exceeded` | 429 | Per-grant or per-Beneficiary cap exhausted |
+| `abds_token_revoked` | 401 | Token or grant revoked |
+| `abds_model_not_scoped` | 403 | Requested model is not permitted |
+| `abds_operation_not_scoped` | 403 | Requested operation is not permitted |
+| `abds_per_request_cap_exceeded` | 429 | Request exceeds its envelope |
+| `abds_quota_exceeded` | 429 | Grant or Beneficiary cap is exhausted |
 | `abds_funding_unavailable` | 403 | Authorized funding cannot cover the request |
-| `abds_sponsorship_ended` | 403 | Sponsorship Program ended or was revoked |
-| `abds_subscription_lapsed` | 403 | Required user entitlement is no longer active |
-| `abds_reservation_required` | 409 | Request requires a reservation |
-| `abds_reservation_expired` | 409 | Reservation no longer valid |
+| `abds_sponsorship_ended` | 403 | Sponsor program ended or was revoked |
+| `abds_reservation_required` | 409 | Operation requires a reservation |
+| `abds_reservation_denied` | 429 | Envelope cannot be reserved |
+| `abds_reservation_expired` | 409 | Reservation is no longer active |
+| `abds_reservation_conflict` | 409 | Idempotency key conflicts with another request |
+| `abds_execution_envelope_exhausted` | 429 | Execution reached its limit |
+| `abds_settlement_conflict` | 409 | Settlement conflicts with an existing terminal record |
+| `abds_reconciliation_pending` | 202 | Final settlement is pending |
+| `abds_attribution_invalid` | 400 | Attribution metadata is malformed or prohibited |
 
-Client-facing errors MUST NOT disclose confidential balances, unrelated grants, or internal risk decisions.
+Errors MUST NOT expose confidential balances, unrelated grants, internal prices, or risk decisions.
 
-## 18. Implementation Profiles
+## 21. Implementation Profiles
 
-ABDS defines:
+ABDS defines Basic, Standard, Advanced / Enterprise, and Sponsored Funding maturity profiles. They are not conformance badges until a test suite exists. See `IMPLEMENTATION_PROFILES.md`.
 
-- Basic,
-- Standard,
-- Advanced / Enterprise, and
-- Sponsored Funding profiles.
+## 22. Versioning and Change Control
 
-These are implementation maturity profiles, not conformance badges until test vectors and a conformance suite exist.
+This specification is **v0.5 Draft**.
 
-See `IMPLEMENTATION_PROFILES.md`.
+- **v0.5:** Added the two-plane execution model, one Usage Event per physical attempt, separate Ledger Events, requested/resolved model attribution, retry/fallback/agent correlation, extensible dimensions, reservation, settlement, reconciliation, idempotency, append-only adjustments, schemas, examples, and synchronized supporting documentation.
+- **v0.4:** Added payer-neutral and Sponsor funding, Rich Authorization Requests, Sponsor privacy, and no silent payer substitution.
+- **v0.3:** Added OAuth terminology, PKCE, discovery, profiles, `delegation_id`, and threat model.
+- **v0.2:** Removed mutable quota from tokens and introduced the Provider-side grant and ledger architecture.
+- **v0.1:** Initial draft.
 
-## 19. Versioning
+See `CHANGELOG.md` for migration guidance.
 
-This specification is v0.4 Draft.
+## 23. Machine-Readable Artifacts
 
-### Changelog
+- `schemas/abds-usage-event-v0.5.schema.json`
+- `schemas/abds-ledger-event-v0.5.schema.json`
+- `examples/usage-event-agent-fallback.json`
+- `examples/reservation-settlement-sequence.json`
 
-**v0.4** - Generalized ABDS to payer-neutral funding; added Funding Principal, Economic Authorizer, Beneficiary, and funding-source types; added sponsored funding; replaced custom economic query parameters with OAuth Rich Authorization Request guidance; separated grant policy from ledger usage; added no-silent-payer-substitution and sponsor-privacy requirements; expanded errors.
+## 24. Standards References
 
-**v0.3** - Added OAuth terminology alignment, PKCE, provider discovery, implementation profiles, `delegation_id` clarification, and stronger security considerations.
-
-**v0.2** - Removed mutable quota state from Execution Tokens and introduced the four-object model, provider-side grant, Usage Ledger, and Usage Introspection.
-
-**v0.1** - Initial draft.
-
-## 20. Standards References
-
-- [RFC 6749 - The OAuth 2.0 Authorization Framework](https://www.rfc-editor.org/rfc/rfc6749)
-- [RFC 7636 - Proof Key for Code Exchange](https://www.rfc-editor.org/rfc/rfc7636)
-- [RFC 8414 - OAuth 2.0 Authorization Server Metadata](https://www.rfc-editor.org/rfc/rfc8414)
-- [RFC 8693 - OAuth 2.0 Token Exchange](https://www.rfc-editor.org/rfc/rfc8693)
-- [RFC 8707 - Resource Indicators for OAuth 2.0](https://www.rfc-editor.org/rfc/rfc8707)
-- [RFC 9126 - OAuth 2.0 Pushed Authorization Requests](https://www.rfc-editor.org/rfc/rfc9126)
-- [RFC 9396 - OAuth 2.0 Rich Authorization Requests](https://www.rfc-editor.org/rfc/rfc9396)
-- [RFC 9449 - OAuth 2.0 Demonstrating Proof of Possession](https://www.rfc-editor.org/rfc/rfc9449)
-- [RFC 9700 - Best Current Practice for OAuth 2.0 Security](https://www.rfc-editor.org/rfc/rfc9700)
+- [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119)
+- [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749)
+- [RFC 7636](https://www.rfc-editor.org/rfc/rfc7636)
+- [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174)
+- [RFC 8414](https://www.rfc-editor.org/rfc/rfc8414)
+- [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693)
+- [RFC 8707](https://www.rfc-editor.org/rfc/rfc8707)
+- [RFC 9126](https://www.rfc-editor.org/rfc/rfc9126)
+- [RFC 9396](https://www.rfc-editor.org/rfc/rfc9396)
+- [RFC 9449](https://www.rfc-editor.org/rfc/rfc9449)
+- [RFC 9700](https://www.rfc-editor.org/rfc/rfc9700)
 
 ---
 
