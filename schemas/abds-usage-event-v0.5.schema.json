@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:abds:schema:usage-event:0.5",
+  "title": "ABDS AI Call Usage Event v0.5",
+  "description": "Immutable provider-side usage event for one physical AI model attempt.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "usage_event_id",
+    "occurred_at",
+    "delegation_id",
+    "client_id",
+    "request_id",
+    "attempt_id",
+    "operation",
+    "provider",
+    "resolved_model",
+    "outcome",
+    "usage_dimensions",
+    "billing"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.5"
+    },
+    "usage_event_id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 200
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "delegation_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "client_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "beneficiary_ref": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "sponsorship_program_id": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "attempt_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "parent_attempt_id": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "reservation_id": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "idempotency_key": {
+      "type": "string",
+      "maxLength": 255
+    },
+    "trace_id": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "span_id": {
+      "type": "string",
+      "maxLength": 32
+    },
+    "causation_id": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "correlation_id": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "operation": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "route_provider": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "requested_model": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "resolved_model": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "model_revision": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "routing_reason": {
+      "type": "string",
+      "enum": ["primary", "fallback", "policy", "capacity", "safety", "cost", "other"]
+    },
+    "retry_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "retry_reason": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "response_shape": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "completed_partial",
+        "cancelled",
+        "failed_before_inference",
+        "failed_after_partial_inference",
+        "timed_out",
+        "denied",
+        "superseded"
+      ]
+    },
+    "latency_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "usage_dimensions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/usageDimension"
+      }
+    },
+    "billing": {
+      "$ref": "#/$defs/billing"
+    },
+    "client_attribution": {
+      "$ref": "#/$defs/clientAttribution"
+    }
+  },
+  "$defs": {
+    "usageDimension": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["type", "quantity", "unit"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "quantity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      }
+    },
+    "money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "currency"],
+      "properties": {
+        "value": {
+          "type": "string",
+          "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        }
+      }
+    },
+    "billing": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "unit_type",
+        "settled_quantity",
+        "funding_source_type",
+        "funding_bucket_ref"
+      ],
+      "properties": {
+        "unit_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "reserved_quantity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "settled_quantity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "funding_source_type": {
+          "type": "string",
+          "enum": [
+            "user_entitlement",
+            "organization_budget",
+            "sponsor_budget",
+            "provider_promotion",
+            "developer_account"
+          ]
+        },
+        "funding_bucket_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "price_snapshot_id": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "amount": {
+          "$ref": "#/$defs/money"
+        }
+      }
+    },
+    "clientAttribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workspace_ref": {"type": "string", "maxLength": 200},
+        "feature_ref": {"type": "string", "maxLength": 200},
+        "workflow_ref": {"type": "string", "maxLength": 200},
+        "agent_run_ref": {"type": "string", "maxLength": 200},
+        "agent_step_ref": {"type": "string", "maxLength": 200},
+        "experiment_ref": {"type": "string", "maxLength": 200}
+      }
+    }
+  }
+}
