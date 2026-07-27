@@ -5,13 +5,12 @@ from __future__ import annotations
 
 import json
 import sys
-from collections import Counter
 from pathlib import Path
 from typing import Any
 
 try:
     from jsonschema import Draft202012Validator, FormatChecker
-except ImportError as exc:  # pragma: no cover - clear setup failure
+except ImportError as exc:  # pragma: no cover
     raise SystemExit(
         "Missing dependency: install jsonschema with `python -m pip install jsonschema`."
     ) from exc
@@ -80,47 +79,31 @@ def validate_cross_event_invariants(
     reservation = reservations[0]
     reservation_id = reservation["reservation_id"]
     related = [event for event in ledger_events if event.get("reservation_id") == reservation_id]
-
-    terminal_counts = Counter(
-        event["event_type"]
+    finalizers = [
+        event
         for event in related
-        if event["event_type"] in {
-            "settlement_posted",
-            "reservation_released",
-            "reservation_expired",
-        }
-    )
-    if terminal_counts["reservation_expired"] and (
-        terminal_counts["settlement_posted"] or terminal_counts["reservation_released"]
-    ):
-        raise AssertionError("An expired reservation cannot also be settled or released.")
-    if terminal_counts["settlement_posted"] > 1:
-        raise AssertionError("A reservation cannot have multiple settlement events in this profile.")
+        if event["event_type"]
+        in {"settlement_posted", "reservation_released", "reservation_expired"}
+    ]
+    if len(finalizers) != 1:
+        raise AssertionError("A reservation must have exactly one terminal finalization.")
 
+    finalizer = finalizers[0]
     reserved_quantity = float(reservation["quantity"])
-    settled_quantity = sum(
-        float(event["quantity"])
-        for event in related
-        if event["event_type"] == "settlement_posted"
-    )
-    released_quantity = sum(
-        float(event["quantity"])
-        for event in related
-        if event["event_type"] == "reservation_released"
-    )
-    if settled_quantity + released_quantity > reserved_quantity:
-        raise AssertionError("Settled plus released quantity exceeds the reservation.")
-    if settled_quantity != float(usage_event["billing"]["settled_quantity"]):
-        raise AssertionError("Usage billing settled_quantity must match ledger settlement.")
 
-    settlement_usage_ids = {
-        usage_id
-        for event in related
-        if event["event_type"] == "settlement_posted"
-        for usage_id in event.get("usage_event_ids", [])
-    }
-    if usage_event["usage_event_id"] not in settlement_usage_ids:
-        raise AssertionError("Settlement must reference the worked Usage Event.")
+    if finalizer["event_type"] == "settlement_posted":
+        settled_quantity = float(finalizer["quantity"])
+        released_quantity = float(finalizer.get("released_quantity", 0))
+        if settled_quantity + released_quantity != reserved_quantity:
+            raise AssertionError(
+                "Worked settlement must account for the full reservation as settled plus released."
+            )
+        if settled_quantity != float(usage_event["billing"]["settled_quantity"]):
+            raise AssertionError("Usage billing settled_quantity must match ledger settlement.")
+        if usage_event["usage_event_id"] not in set(finalizer.get("usage_event_ids", [])):
+            raise AssertionError("Settlement must reference the worked Usage Event.")
+    elif float(finalizer["quantity"]) != reserved_quantity:
+        raise AssertionError("A full release or expiry must account for the reservation quantity.")
 
 
 def main() -> int:
