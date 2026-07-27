@@ -1,0 +1,51 @@
+{
+  "schema_version": "0.5",
+  "usage_event_id": "uev_01JZ8Q8V7Y5K",
+  "occurred_at": "2026-07-27T09:15:32.184Z",
+  "delegation_id": "del_abc123",
+  "client_id": "app_natureguard",
+  "beneficiary_ref": "ben_pairwise_91",
+  "sponsorship_program_id": "program_green_earth_2026",
+  "request_id": "req_88",
+  "attempt_id": "att_88_2",
+  "parent_attempt_id": "att_88_1",
+  "reservation_id": "res_88",
+  "idempotency_key": "idem_6f91",
+  "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
+  "span_id": "00f067aa0ba902b7",
+  "operation": "ai.generate.text",
+  "provider": "provider.example",
+  "route_provider": "upstream.example",
+  "requested_model": "economy-text",
+  "resolved_model": "economy-text-2026-07-15",
+  "model_revision": "2026-07-15",
+  "routing_reason": "fallback",
+  "retry_count": 1,
+  "retry_reason": "upstream_timeout",
+  "response_shape": "openai_chat_completions",
+  "outcome": "completed",
+  "latency_ms": 1840,
+  "usage_dimensions": [
+    {"type": "input_tokens", "quantity": 1250, "unit": "token"},
+    {"type": "output_tokens", "quantity": 310, "unit": "token"},
+    {"type": "cached_input_tokens", "quantity": 800, "unit": "token"},
+    {"type": "tool_calls", "quantity": 2, "unit": "call"}
+  ],
+  "billing": {
+    "unit_type": "provider_ai_unit",
+    "reserved_quantity": 5,
+    "settled_quantity": 3,
+    "funding_source_type": "sponsor_budget",
+    "funding_bucket_ref": "bucket_pairwise_7f2",
+    "price_snapshot_id": "price_2026_07_standard_text",
+    "amount": {"value": "0.0048", "currency": "USD"}
+  },
+  "client_attribution": {
+    "workspace_ref": "ws_pseudo_42",
+    "feature_ref": "feature_report_draft",
+    "workflow_ref": "workflow_incident_triage",
+    "agent_run_ref": "run_abc",
+    "agent_step_ref": "step_04",
+    "experiment_ref": "exp_routing_b"
+  }
+}
