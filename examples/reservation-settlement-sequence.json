@@ -1,0 +1,53 @@
+[
+  {
+    "schema_version": "0.5",
+    "ledger_event_id": "lev_res_88",
+    "event_type": "reservation_created",
+    "occurred_at": "2026-07-27T09:15:30.000Z",
+    "delegation_id": "del_abc123",
+    "client_id": "app_natureguard",
+    "request_id": "req_88",
+    "reservation_id": "res_88",
+    "idempotency_key": "idem_res_req_88",
+    "unit_type": "provider_ai_unit",
+    "quantity": 5,
+    "funding_source_type": "sponsor_budget",
+    "funding_bucket_ref": "bucket_pairwise_7f2",
+    "actor_type": "provider"
+  },
+  {
+    "schema_version": "0.5",
+    "ledger_event_id": "lev_set_88",
+    "event_type": "settlement_posted",
+    "occurred_at": "2026-07-27T09:15:34.000Z",
+    "delegation_id": "del_abc123",
+    "client_id": "app_natureguard",
+    "request_id": "req_88",
+    "reservation_id": "res_88",
+    "settlement_id": "set_88",
+    "usage_event_ids": ["uev_01JZ8Q8V7Y5K"],
+    "idempotency_key": "idem_set_req_88",
+    "unit_type": "provider_ai_unit",
+    "quantity": 3,
+    "funding_source_type": "sponsor_budget",
+    "funding_bucket_ref": "bucket_pairwise_7f2",
+    "price_snapshot_id": "price_2026_07_standard_text",
+    "amount": {"value": "0.0048", "currency": "USD"},
+    "actor_type": "provider"
+  },
+  {
+    "schema_version": "0.5",
+    "ledger_event_id": "lev_rel_88",
+    "event_type": "reservation_released",
+    "occurred_at": "2026-07-27T09:15:34.010Z",
+    "delegation_id": "del_abc123",
+    "client_id": "app_natureguard",
+    "request_id": "req_88",
+    "reservation_id": "res_88",
+    "unit_type": "provider_ai_unit",
+    "quantity": 2,
+    "funding_source_type": "sponsor_budget",
+    "funding_bucket_ref": "bucket_pairwise_7f2",
+    "actor_type": "provider"
+  }
+]
