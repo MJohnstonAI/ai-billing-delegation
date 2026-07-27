@@ -1,29 +1,17 @@
-# ABDS Provider Discovery
+# ABDS Provider Discovery v0.5
 
-> Draft proposal for discovering ABDS support, endpoints, scopes, and provider capabilities.
-
-Provider discovery is important because ABDS should not become a collection of provider-specific integrations. A third-party application should be able to determine whether a provider supports ABDS, which profile level it supports, which endpoints are available, and which resource-delegation features are enabled.
+> Draft metadata for discovering ABDS endpoints, profiles, event schemas, and execution-accounting capabilities.
 
 ## Design Principle
 
-ABDS discovery should align with existing OAuth metadata practices wherever possible.
+ABDS discovery SHOULD extend established OAuth metadata practices. Discovery describes Provider capability, not a particular user's entitlement or balance.
 
-Providers SHOULD publish ABDS capability metadata either as:
+Providers SHOULD publish ABDS metadata as either:
 
-1. extensions to OAuth Authorization Server Metadata, or
-2. a separately registered ABDS-specific well-known metadata document.
+1. extensions to OAuth Authorization Server Metadata; or
+2. a separately registered ABDS well-known document.
 
 ## Option A: OAuth Metadata Extensions
-
-Providers may extend their OAuth Authorization Server Metadata document with ABDS-specific fields.
-
-Typical location:
-
-```text
-GET /.well-known/oauth-authorization-server
-```
-
-Example additional metadata fields:
 
 ```json
 {
@@ -32,55 +20,63 @@ Example additional metadata fields:
   "token_endpoint": "https://auth.provider.example/oauth/token",
   "revocation_endpoint": "https://auth.provider.example/oauth/revoke",
   "abds_supported": true,
-  "abds_version": "0.4",
-  "abds_profiles_supported": ["basic", "standard", "sponsored_funding"],
+  "abds_versions_supported": ["0.5"],
+  "abds_profiles_supported": ["basic", "standard", "advanced", "sponsored_funding"],
   "abds_authorization_details_types_supported": ["abds_ai_delegation"],
-  "abds_usage_introspection_endpoint": "https://api.provider.example/v1/abds/delegations/{delegation_id}/usage",
-  "abds_supported_scopes": [
-    "ai.quota.delegate",
-    "ai.quota.read"
-  ],
+  "abds_usage_status_endpoint": "https://api.provider.example/v1/abds/delegations/{delegation_id}/usage",
+  "abds_usage_events_endpoint": "https://api.provider.example/v1/abds/delegations/{delegation_id}/events",
+  "abds_supported_scopes": ["ai.execute", "ai.usage.read"],
   "abds_supported_quota_periods": ["daily", "weekly", "monthly"],
   "abds_funding_source_types_supported": [
     "user_entitlement",
+    "organization_budget",
     "sponsor_budget",
     "provider_promotion",
     "developer_account"
   ],
+  "abds_usage_event_schema_versions_supported": ["0.5"],
+  "abds_ledger_event_schema_versions_supported": ["0.5"],
+  "abds_usage_dimensions_supported": [
+    "input_tokens",
+    "output_tokens",
+    "cached_input_tokens",
+    "reasoning_tokens",
+    "image_input",
+    "tool_calls"
+  ],
+  "abds_event_delivery_modes_supported": ["paginated_retrieval", "signed_webhook", "export"],
+  "abds_reservation_supported": true,
+  "abds_partial_settlement_supported": true,
+  "abds_reconciliation_supported": true,
   "abds_sponsorship_programs_supported": true,
   "abds_model_scope_supported": true,
-  "abds_reservation_supported": false,
   "abds_sender_constrained_tokens_supported": true
 }
 ```
 
 ## Option B: ABDS-Specific Metadata Document
 
-If ABDS requires a separate metadata document, the proposed location is:
+Proposed location:
 
 ```text
 GET /.well-known/abds-configuration
 ```
 
-Example:
-
 ```json
 {
   "issuer": "https://auth.provider.example",
-  "abds_version": "0.4",
-  "profiles_supported": ["basic", "standard", "sponsored_funding"],
+  "abds_versions_supported": ["0.5"],
+  "profiles_supported": ["basic", "standard", "advanced", "sponsored_funding"],
   "authorization_details_types_supported": ["abds_ai_delegation"],
   "authorization_endpoint": "https://auth.provider.example/oauth/authorize",
   "token_endpoint": "https://auth.provider.example/oauth/token",
+  "revocation_endpoint": "https://auth.provider.example/oauth/revoke",
   "token_exchange_supported": true,
   "resource_indicators_supported": true,
-  "revocation_endpoint": "https://auth.provider.example/oauth/revoke",
-  "usage_introspection_endpoint": "https://api.provider.example/v1/abds/delegations/{delegation_id}/usage",
+  "usage_status_endpoint": "https://api.provider.example/v1/abds/delegations/{delegation_id}/usage",
+  "usage_events_endpoint": "https://api.provider.example/v1/abds/delegations/{delegation_id}/events",
   "delegation_management_endpoint": "https://provider.example/account/connected-apps",
-  "supported_scopes": [
-    "ai.quota.delegate",
-    "ai.quota.read"
-  ],
+  "supported_scopes": ["ai.execute", "ai.usage.read"],
   "supported_quota_periods": ["daily", "weekly", "monthly"],
   "funding_source_types_supported": [
     "user_entitlement",
@@ -89,91 +85,92 @@ Example:
     "provider_promotion",
     "developer_account"
   ],
+  "usage_event_schema_versions_supported": ["0.5"],
+  "ledger_event_schema_versions_supported": ["0.5"],
+  "usage_dimensions_supported": ["input_tokens", "output_tokens", "image_input", "tool_calls"],
+  "event_delivery_modes_supported": ["paginated_retrieval", "signed_webhook"],
+  "reservation_supported": true,
+  "partial_settlement_supported": true,
+  "reconciliation_supported": true,
+  "idempotency_supported": true,
   "sponsorship_programs_supported": true,
   "model_scope_supported": true,
-  "reservation_supported": false,
   "sender_constrained_tokens_supported": true,
   "dpop_supported": true,
-  "par_supported": false
+  "par_supported": true,
+  "consent_receipts_supported": false
 }
 ```
 
-## Required Metadata Fields
-
-A minimal ABDS discovery response should include:
+## Required Metadata
 
 | Field | Required | Description |
 |---|---:|---|
 | `issuer` | Yes | Provider issuer identifier |
-| `abds_version` | Yes | Supported ABDS version |
-| `profiles_supported` or `abds_profiles_supported` | Yes | Supported implementation profiles |
+| `abds_versions_supported` | Yes | Supported ABDS draft versions |
+| `profiles_supported` | Yes | Supported implementation profiles |
 | `authorization_endpoint` | Yes | OAuth authorization endpoint |
 | `token_endpoint` | Yes | OAuth token endpoint |
 | `revocation_endpoint` | Yes | Token or delegation revocation endpoint |
-| `usage_introspection_endpoint` | Yes | Provider-authoritative usage endpoint |
+| `usage_status_endpoint` | Yes | Provider-authoritative usage-status endpoint |
 | `supported_scopes` | Yes | Supported ABDS scopes |
-| `supported_quota_periods` | Yes | Supported delegation periods |
-| `authorization_details_types_supported` | Yes | Supported ABDS Rich Authorization Request type identifiers |
-| `funding_source_types_supported` | Yes | Funding-source types the Provider can authorize and enforce |
+| `supported_quota_periods` | Yes | Supported grant periods |
+| `authorization_details_types_supported` | Yes | Supported Rich Authorization Request identifiers |
+| `funding_source_types_supported` | Yes | Enforceable funding-source types |
 
-## Optional Metadata Fields
+## v0.5 Capability Metadata
 
 | Field | Description |
 |---|---|
-| `model_scope_supported` | Whether per-model or model-family scoping is supported |
-| `reservation_supported` | Whether reservation / settlement semantics are supported |
-| `sender_constrained_tokens_supported` | Whether sender-constrained execution tokens are available |
-| `dpop_supported` | Whether DPoP is supported |
-| `par_supported` | Whether pushed authorization requests are supported |
-| `delegation_management_endpoint` | User-facing connected-apps or grant-management location |
-| `app_verification_required` | Whether apps must be verified before requesting ABDS scopes |
-| `max_delegation_period` | Maximum permitted quota period |
-| `max_delegated_resource_units` | Provider-defined maximum delegated cap |
-| `sponsorship_programs_supported` | Whether the Provider supports Sponsor-funded program budgets |
-| `sponsor_verification_required` | Whether Sponsors must be verified before publishing funding offers |
-| `sponsor_reporting_modes_supported` | Sponsor reporting modes such as `aggregate_only` |
-| `consent_receipts_supported` | Whether the Provider can issue versioned consent receipts |
+| `usage_events_endpoint` | Grant-specific usage-event retrieval endpoint |
+| `usage_event_schema_versions_supported` | Supported Usage Event schema versions |
+| `ledger_event_schema_versions_supported` | Supported Ledger Event schema versions |
+| `usage_dimensions_supported` | Published token, modality, tool, and other dimensions |
+| `event_delivery_modes_supported` | Retrieval, webhook, export, or console modes |
+| `reservation_supported` | Reservation and settlement support |
+| `partial_settlement_supported` | Partial completion and cancellation accounting |
+| `reconciliation_supported` | Pending and later-finalized settlement support |
+| `idempotency_supported` | Replay-safe reservation and settlement operations |
+| `monetary_amounts_exposed` | Whether grant-visible events include currency amounts |
+| `pricing_snapshot_supported` | Whether historical price snapshots are exposed |
+| `client_attribution_fields_supported` | Opaque workspace, feature, workflow, agent, trace, or experiment fields echoed by the Provider |
+
+## Other Optional Metadata
+
+- `model_scope_supported`
+- `sender_constrained_tokens_supported`
+- `dpop_supported`
+- `par_supported`
+- `delegation_management_endpoint`
+- `app_verification_required`
+- `max_delegation_period`
+- `max_delegated_resource_units`
+- `sponsorship_programs_supported`
+- `sponsor_verification_required`
+- `sponsor_reporting_modes_supported`
+- `consent_receipts_supported`
 
 ## Identifier Guidance
 
-ABDS should standardize on `delegation_id` as the public reference identifier used in:
+`delegation_id` is the public grant reference used in tokens, usage status, Usage Events, Ledger Events, revocation, and connected-app records. Providers MAY maintain an internal `grant_id`.
 
-- execution tokens,
-- introspection endpoints,
-- logs,
-- revocation events,
-- user-facing connected-app records.
-
-Providers MAY maintain an internal `grant_id`, but `grant_id` should not be required in public ABDS APIs.
-
-Recommended public endpoint shape:
+Recommended endpoint shapes:
 
 ```text
 GET /v1/abds/delegations/{delegation_id}/usage
+GET /v1/abds/delegations/{delegation_id}/events
 ```
 
-## Security Considerations
+## Security and Privacy
 
-Discovery metadata should not reveal:
+Discovery metadata MUST NOT reveal user plan, balance, private model access, Provider risk thresholds, internal grant identifiers, Sponsor pool balances, Beneficiary eligibility, private funding offers, or pricing confidential to a contract.
 
-- a user's subscription tier,
-- a user's quota balance,
-- provider-internal risk thresholds,
-- private model availability by account,
-- internal grant identifiers.
-- Sponsor pool balances,
-- Beneficiary eligibility data,
-- private funding offers, or
-- Sponsor risk and verification signals.
-
-Discovery describes provider capability, not user entitlement.
+Public discovery describes capability. Authenticated endpoints determine entitlement and authorization.
 
 ## Open Questions
 
-1. Should ABDS define a registered `.well-known/abds-configuration` suffix?
-2. Should ABDS metadata be only an OAuth metadata extension?
-3. Should provider discovery include profile-level conformance details?
-4. Should apps be allowed to discover maximum cap ranges before user authorization?
-5. Should model families be represented by provider-defined strings or a cross-provider taxonomy?
-6. Should the ABDS authorization-details type be registered once globally or versioned by profile?
-7. Which Sponsor capabilities belong in public discovery versus authenticated Sponsor metadata?
+1. Should ABDS use only OAuth metadata extensions or register a separate well-known suffix?
+2. Which v0.5 event fields belong in public discovery versus authenticated metadata?
+3. Should Providers advertise billability rules for failed, speculative, and fallback attempts?
+4. Should pricing-snapshot support be a Standard-profile requirement?
+5. Should webhook signing and replay protection use a common profile?
