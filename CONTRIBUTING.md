@@ -1,88 +1,102 @@
-# Contributing to ABDS
+# Contributing to ABDS v0.5
 
-ABDS is an early payer-neutral delegation proposal. It needs evidence, critique, and implementation experience before it can credibly seek standards discussion.
+ABDS is an open draft that needs implementation evidence, adversarial critique, and Provider review before it can credibly seek formal standards discussion.
+
+## Read the Canonical Draft First
+
+Use this order:
+
+1. `README.md`
+2. `CHANGELOG.md`
+3. `SPEC.md`
+4. `USAGE_ATTRIBUTION.md`
+5. `RESERVATION_SETTLEMENT.md`
+6. `FLOWS.md`
+7. `THREAT_MODEL.md`
+8. `IMPLEMENTATION_PROFILES.md`
+9. `DISCOVERY.md`
+
+Historical AI contributions and earlier commits are research context, not current normative guidance.
 
 ## Share a Real Use Case
 
-Open an Issue titled **"Use case: [app or program name]"** and describe:
+Open an issue titled **Use case: [application or program]** and describe:
 
-- who uses the application,
-- who currently pays for AI usage,
-- who could fund it under ABDS,
-- which limits and privacy promises are required,
-- how the current billing model affected the product, and
-- what would make the use case unacceptable to an AI Provider.
+- Resource User and Beneficiary;
+- current payer and proposed Funding Principal;
+- Client, feature, workflow, and model usage pattern;
+- retries, routing, streaming, tools, or agent steps that affect cost;
+- required caps, reservation behavior, and privacy promises;
+- current billing failure or product constraint; and
+- what would make the design unacceptable to a Provider.
 
-Useful examples include consumer apps, nonprofit programs, education, employers, universities, government services, accessibility tools, and Provider-funded promotions.
+Useful domains include consumer apps, nonprofits, education, employers, universities, government services, accessibility, research, and Provider-funded promotions.
 
-## Review the Specification
+## Review Priorities
 
-High-priority questions:
+High-value review questions include:
 
-- Is payer-neutral funding a sound generalization?
-- Should Sponsored Funding be part of the core model or an extension?
-- Is OAuth 2.0 Rich Authorization Requests the right carrier for economic policy?
-- Are grant authorization policy and ledger state separated correctly?
-- How should token refresh and Token Exchange work?
-- How should variable-cost requests reserve and settle units?
-- Which Sponsor reports are useful without becoming surveillance?
-- How should Beneficiary eligibility be attested?
-- Which policy changes require renewed consent?
-- What attack would make a Provider reject the design?
+- Is payer-neutral funding a sound abstraction?
+- Is Rich Authorization Requests the right carrier for economic policy?
+- Are grant policy, Usage Events, and Ledger Events separated correctly?
+- Is one event per physical model attempt practical?
+- Which usage dimensions form the minimum interoperable core?
+- How should failed, speculative, retry, fallback, and safety calls be billed?
+- When must a Provider reserve resources before execution?
+- Are settlement, release, reconciliation, and adjustment semantics idempotent and auditable?
+- Can Sponsor reporting remain useful without becoming surveillance?
+- What Provider economics or abuse risk would defeat adoption?
 
-Submit improvements as Pull Requests against `SPEC.md`, `SPONSORED_DELEGATION.md`, or the relevant supporting document.
+Submit changes against the relevant canonical document. Material version changes must also update `CHANGELOG.md` and the `SPEC.md` changelog.
 
 ## Build a Reference Simulator
 
-A useful reference implementation would include:
+A useful ABDS Studio implementation should include:
 
-- a mock Provider Authorization Server and Resource Server,
-- Provider discovery metadata,
-- a user-funded flow,
-- a Sponsor program and NatureGuard Client,
-- provider-controlled consent,
-- a grant service,
-- short-lived Execution Tokens,
-- a Usage Ledger,
-- reservation and settlement,
-- grant and program revocation,
-- quota exhaustion,
-- tests proving no silent payer substitution,
-- tests proving Sponsor funding does not expose prompts or outputs, and
-- a machine-readable conformance report.
+- mock Authorization Server, Resource Server, grant service, and Provider ledger;
+- user-funded and Sponsor-funded flows;
+- Provider-controlled consent;
+- short-lived Execution Tokens;
+- one Usage Event per physical attempt;
+- requested/resolved model and retry/fallback attribution;
+- reservation, settlement, released quantity, expiry, and adjustment;
+- grant and program revocation;
+- usage and event retrieval;
+- no-silent-payer-substitution tests;
+- Sponsor privacy tests;
+- schema and invariant validation; and
+- machine-readable conformance output.
 
-The simulator should use fictional Provider domains and resource units. It must not imply that a real Provider implements ABDS unless that integration exists and is authorized.
+Use fictional Provider domains and resource units unless an authorized integration exists.
 
 ## Add Technical Evidence
 
 Especially useful contributions include:
 
-- OAuth and authorization-details analysis,
-- security and privacy review,
-- Provider economics,
-- Sponsor governance,
-- nonprofit or public-interest funding requirements,
-- ledger concurrency and idempotency,
-- consent research,
-- conformance test vectors, and
-- comparison with established delegated authorization systems.
+- OAuth and Rich Authorization Request analysis;
+- Provider gateway and accounting architecture;
+- usage-event and ledger-event schema review;
+- concurrency, idempotency, and reconciliation tests;
+- event-delivery signing and replay protection;
+- routing and model-alias interoperability;
+- Provider economics and fraud analysis;
+- Sponsor governance and privacy research;
+- consent receipt design;
+- OpenTelemetry mapping; and
+- positive and negative conformance vectors.
 
 ## AI-Assisted Contributions
 
-See [AI_CONTRIBUTIONS/README.md](AI_CONTRIBUTIONS/README.md).
+See `AI_CONTRIBUTIONS/README.md`.
 
-Contributors should:
+Contributors must identify the model and date, distinguish generated analysis from accepted project decisions, verify technical claims against primary sources, avoid implying Provider endorsement, and retain human responsibility for the final contribution.
 
-- identify the model and date,
-- distinguish generated analysis from human decisions,
-- verify technical claims against primary sources,
-- avoid claiming provider support that does not exist, and
-- retain the human contributor's responsibility for the final change.
+## Repository Workflow
 
-## Code of Conduct
+The current accepted draft lives on `main`. Short-lived review branches and pull requests are welcome, but substantive accepted standards work should not remain hidden on parallel branches. Git history and release tags preserve prior states.
 
-Contributions should be substantive, specific, respectful, and open to challenge. Personal attacks, spam, and off-topic promotion will be removed.
+## Conduct and Governance
 
-## Governance
+Contributions must be substantive, specific, respectful, and open to challenge. Spam, personal attacks, and misleading promotional claims will be removed.
 
-ABDS is currently maintained by [@MJohnstonAI](https://github.com/MJohnstonAI). If the project gains external implementation and review, governance should move toward a multi-stakeholder working group including Provider, developer, security, privacy, user, and Funding Principal perspectives.
+ABDS is currently maintained by `@MJohnstonAI`. If external implementations and reviews develop, governance should move toward a multi-stakeholder model including Provider, developer, security, accounting, privacy, user, and Funding Principal perspectives.
