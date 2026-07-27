@@ -1,81 +1,87 @@
 # Design Decisions Log
 
-This document records decisions that have been made in the ABDS proposal and the reasoning behind them.
+This document records accepted ABDS design decisions and their rationale.
 
----
+## D1: Extend OAuth Rather Than Define a New Authentication Protocol
 
-## D1: Extend OAuth 2.0 Rather Than Define a New Protocol
+**Decision:** ABDS profiles established OAuth mechanisms.
 
-**Decision:** ABDS extends OAuth 2.0 rather than defining a new authentication protocol from scratch.
+**Rationale:** OAuth has mature libraries, deployment experience, and extensibility. ABDS should focus on AI resource authorization and accounting.
 
-**Rationale:** OAuth 2.0 has mature libraries, deployment experience, security analysis, and extensibility mechanisms. Profiling it lets ABDS focus on metered-resource authorization rather than inventing a new credential protocol.
+## D2: User-Controlled Caps Are Mandatory
 
-**Considered alternative:** A new purpose-built protocol with AI-specific primitives. Rejected due to adoption friction and the difficulty of competing with established standards.
+**Decision:** The effective consent flow MUST allow a Resource User or Provider policy to reduce the Client's requested cap.
 
----
+**Rationale:** Bounded consent is essential to user trust and economic safety.
 
-## D2: User-Controlled Quota Caps Are Mandatory
+## D3: Model Scoping Is Policy-Driven
 
-**Decision:** The ABDS consent screen MUST allow users to set their own quota cap, overriding the app's requested amount.
+**Decision:** `model_scope` may be optional for simple grants, but Providers MUST enforce it whenever consent or policy restricts model classes.
 
-**Rationale:** User trust and control are prerequisites for adoption. If users cannot cap how much of their subscription an app can consume, they will not authorize delegation. The Spotify model works because users trust they will not be charged extra — ABDS must provide the equivalent guarantee.
+**Rationale:** Simple apps need low friction; high-cost or routed workloads need cost and policy controls.
 
----
+## D4: Sensitive Credentials Stay Out of Untrusted Clients
 
-## D3: Model Scoping Is Optional
+**Decision:** Backend-mediated token handling is the default for consumer apps. Public-client execution requires suitably short-lived, audience-restricted, sender-constrained credentials and equivalent risk controls.
 
-**Decision:** `model_scope` is an optional parameter. Apps may request delegation without restricting which models can be used.
+## D5: ABDS Is an Open Cross-Vendor Proposal
 
-**Rationale:** Requiring model scoping adds friction for simple apps. Advanced apps that want to restrict costs to cheaper models (e.g. Haiku rather than Opus) can use it. The default (no model_scope) allows any model the user's subscription includes.
-
----
-
-## D4: Sensitive Credentials Must Not Be Exposed to Untrusted Clients
-
-**Decision:** Backend-mediated token handling is the default for consumer applications. Direct public-client execution is permitted only when the Provider explicitly supports it with suitably short-lived, audience-restricted, sender-constrained credentials and an equivalent risk profile.
-
-**Rationale:** An ABDS credential can consume a user's or Sponsor's scarce allowance. Browser storage, mobile application packages, and logs are common extraction paths. The standard should define the required security outcome without making one network topology the only compliant architecture.
-
----
-
-## D5: ABDS Is Defined As An Open Standard, Not a Vendor Feature
-
-**Decision:** ABDS is proposed as an open, cross-vendor standard with an MIT license.
-
-**Rationale:** A proprietary implementation by one AI provider would solve the problem partially but create new fragmentation. Developers would need different flows for each provider. An open standard enables developer portability and focuses vendor competition on model quality rather than billing model lock-in.
-
----
+**Decision:** ABDS is an MIT-licensed open draft, not a proprietary Provider feature or standards-body publication.
 
 ## D6: The Core Model Is Payer-Neutral
 
-**Decision:** ABDS separates the Resource User, Beneficiary, Funding Principal, Economic Authorizer, Client, and Provider.
-
-**Rationale:** User-funded quota is only one instance of the underlying problem. Employers, universities, governments, donors, foundations, membership organizations, Provider promotions, and developers may also fund bounded usage. The same grant, token, and ledger model can support these cases without assuming that the user is always the payer.
-
-**Considered alternative:** Keep ABDS limited to user subscriptions and create an unrelated Sponsor protocol. Rejected because it would duplicate the core grant and accounting semantics.
-
----
+**Decision:** Resource User, Beneficiary, Funding Principal, Economic Authorizer, Client, and Provider are separate roles.
 
 ## D7: Structured Economic Policy Uses Rich Authorization Requests
 
-**Decision:** ABDS v0.4 uses OAuth 2.0 Rich Authorization Requests as the preferred carrier for cap, period, model, operation, funding offer, and overage policy.
-
-**Rationale:** OAuth scopes are intentionally coarse and cannot safely represent a growing structured economic policy. RFC 9396 provides a standards-track mechanism intended for fine-grained authorization details.
-
-**Considered alternative:** Continue adding custom top-level query parameters such as `quota_cap` and `model_scope`. Rejected as less interoperable and harder to validate.
-
----
+**Decision:** Cap, period, model, operation, funding offer, and overage policy use OAuth Rich Authorization Requests rather than expanding top-level query parameters.
 
 ## D8: Funding Does Not Grant Data Access
 
-**Decision:** Sponsor funding does not authorize Sponsor access to prompts, outputs, files, conversations, or user identity.
-
-**Rationale:** Economic sponsorship and data disclosure are separate decisions. Conflating them would turn an access mechanism into a surveillance mechanism and undermine user trust.
-
----
+**Decision:** Sponsor or organization funding does not authorize access to prompts, outputs, files, conversations, or identity.
 
 ## D9: No Silent Payer Substitution
 
-**Decision:** When an authorized funding source becomes unavailable, ABDS must stop, use another already-authorized source, or obtain fresh authorization.
+**Decision:** When funding becomes unavailable, execution stops, uses another already-authorized source, or obtains fresh authorization.
 
-**Rationale:** Silently charging a user or developer after Sponsor exhaustion breaks the economic consent shown to every party.
+## D10: Usage Facts and Economic Mutations Are Separate Event Families
+
+**Decision:** A Usage Event records one physical AI attempt. A Ledger Event records reservation, settlement, release, expiry, denial, or adjustment.
+
+**Rationale:** Technical telemetry and economic accounting have different invariants, retention, correction, and privacy requirements.
+
+## D11: One Physical Attempt Produces One Usage Event
+
+**Decision:** Retries, fallbacks, speculative calls, safety calls, and route failovers are independently attributable.
+
+**Rationale:** A successful final response must not hide failed or superseded billable work.
+
+## D12: Requested and Resolved Models Are Separate
+
+**Decision:** Routers and aliases distinguish the model requested by the Client from the model actually executed.
+
+**Rationale:** Cost, compatibility, safety, and audit depend on the actual execution path.
+
+## D13: Client Attribution Is Untrusted Observability Metadata
+
+**Decision:** Workspace, feature, workflow, agent, experiment, trace, and span references cannot alter Provider billing or authorization.
+
+**Rationale:** These labels help explain product behavior but are controlled by the Client and may be false or malformed.
+
+## D14: Economic Events Are Append-Only
+
+**Decision:** Accepted usage and ledger events are immutable. Corrections use compensating adjustment events.
+
+**Rationale:** Rewriting history breaks reconciliation, disputes, audit, and historical pricing.
+
+## D15: Variable-Cost Execution Uses Idempotent Reservation and Settlement
+
+**Decision:** Streaming, multimodal, batch, routed, and agentic workloads use estimate-reserve-execute-settle-release where Provider policy requires it.
+
+**Rationale:** Final usage may be unknown at request time, and network retries must not create duplicate holds or charges.
+
+## D16: Main Is the Canonical Current Draft
+
+**Decision:** Accepted substantive documentation lives on `main`; Git history and release tags preserve earlier drafts.
+
+**Rationale:** Human and AI reviewers should not need to discover parallel branches to find the current standard.
