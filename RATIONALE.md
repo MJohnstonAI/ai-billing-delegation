@@ -1,204 +1,168 @@
-# ABDS Rationale and Economic Case
+# ABDS v0.5 Rationale and Economic Case
 
 ## The Developer's Dilemma
 
-Consumer AI developers usually choose among:
+Consumer AI developers typically:
 
-1. paying variable inference costs themselves,
-2. charging users and building credits or subscriptions,
-3. asking users to bring API keys, or
-4. removing the AI-heavy feature.
+1. absorb variable inference cost;
+2. build app-specific subscriptions or credits;
+3. ask users to bring API keys; or
+4. remove expensive AI features.
 
-Each option suppresses useful products:
+Growth can become a liability before revenue exists. API keys are not a mainstream consumer experience, and every application rebuilding payments, balances, metering, and abuse controls wastes engineering effort.
 
-- Growth can become financial liability before a product has a business model.
-- API keys are not a mainstream consumer experience.
-- Every app rebuilding payments, balances, metering, and abuse controls wastes engineering effort.
-- Weak developer proxies and exposed credentials create abuse risk.
+ABDS moves the hard economic control to the AI Provider, which already measures execution and controls access to models.
 
-ABDS moves the hard economic control to the party already best placed to enforce it: the AI Provider.
+## The Payer-Neutral Question
 
-## A Broader Funding Question
-
-The original ABDS proposal asked:
-
-> Can a user authorize an app to consume a bounded part of the user's provider entitlement?
-
-The payer-neutral version asks:
+The original proposal asked whether a user could authorize bounded application usage against a Provider entitlement. The payer-neutral model asks:
 
 > Can any authorized Funding Principal fund a bounded grant for a specific Client and Beneficiary?
 
-That Funding Principal could be:
+The Funding Principal may be a user, employer, university, government program, donor, foundation, membership organization, Provider promotion, or developer.
 
-- the user,
-- an employer,
-- a university,
-- a government program,
-- a donor or foundation,
-- a membership or patronage organization,
-- an AI Provider promotion, or
-- the developer.
+This separates who uses the application, who builds it, who authorizes its AI operations, who funds it, and who enforces and accounts for usage.
 
-This is a stronger abstraction because it separates:
+## Why v0.5 Adds More Than Billing Delegation
 
-- who uses the application,
-- who builds it,
-- who authorizes its AI operations,
-- who funds the provider-recognized budget, and
-- who enforces and accounts for usage.
+Authorization answers **who may consume**. A production platform must also answer:
+
+- which application behavior caused usage;
+- which physical model attempts occurred;
+- whether retries, fallback, routing, tools, or agent steps amplified cost;
+- what the Provider measured;
+- what was reserved and finally settled; and
+- which funding bucket paid.
+
+Without this information, teams guess from aggregate invoices. They cannot reliably optimize product behavior, investigate disputes, compare routes, or demonstrate that Sponsor funds were used as authorized.
+
+v0.5 therefore separates:
+
+```text
+Usage Event Plane     - technical facts about each physical attempt
+Economic Ledger Plane - reservation, settlement, release, denial, and correction
+```
+
+This is not merely observability. It is the audit bridge between authorization and economic settlement.
+
+## Why One Event Per Physical Attempt Matters
+
+One user action may create several real executions:
+
+- primary model call;
+- retry after timeout;
+- fallback to another model;
+- safety or moderation call;
+- speculative call;
+- tool-assisted or agent step.
+
+Recording only the final successful response hides cost and makes routing decisions impossible to audit. v0.5 preserves the logical request while attributing each billable physical attempt separately.
+
+## Why Reservation and Settlement Matter
+
+Streaming, multimodal, batch, routed, and agentic tasks may not have a reliable final cost at request time.
+
+The Provider needs:
+
+```text
+Authorize -> Estimate -> Reserve -> Execute -> Settle -> Release
+```
+
+Reservation prevents concurrent overspend. Settlement uses Provider-measured usage. Idempotency prevents duplicate charges after network retries. Append-only adjustment events preserve audit history without rewriting previous prices or usage.
 
 ## NatureGuard
 
-Suppose a developer builds NatureGuard, an AI nature-identification and conservation assistant.
+Under Sponsor-funded ABDS:
 
-Under the common model:
+1. Green Earth Foundation creates a Provider-recognized NatureGuard program.
+2. The program defines total and per-user caps, model policy, duration, and reporting.
+3. The user sees who pays and what the Sponsor can see.
+4. The Provider creates a grant bound to NatureGuard, the Beneficiary, and Sponsor bucket.
+5. NatureGuard uses a short-lived token.
+6. Each physical model attempt creates a Usage Event.
+7. The Provider reserves and settles the Sponsor ledger.
+8. The Sponsor receives privacy-safe aggregate reporting.
 
-- the developer pays for every identification request,
-- the user buys credits, or
-- the user supplies an API key.
+The user and developer do not pay covered Provider inference cost. The developer still pays for application infrastructure, support, storage, orchestration, and usage outside the grant.
 
-Under sponsored ABDS:
+## Why OAuth Is the Starting Point
 
-1. Green Earth Foundation creates a provider-recognized NatureGuard program.
-2. The program defines a total budget, per-user cap, model policy, end date, and aggregate reporting policy.
-3. A user sees that the foundation pays for covered usage and that the foundation cannot see prompts or answers by default.
-4. The Provider creates a grant bound to NatureGuard, the Beneficiary, and the Sponsor program.
-5. NatureGuard calls the Provider with a short-lived token.
-6. The Provider debits the Sponsor program ledger.
+OAuth provides a familiar pattern for authorizing a registered third-party application without sharing credentials. AI funding requires additional semantics because cost varies, the payer may differ from the user, long tasks are difficult to bound, and consent must explain economic and privacy consequences.
 
-The developer still pays for application infrastructure and operations. The user and developer do not pay the Provider's inference cost for covered calls.
-
-## Why OAuth Is a Useful Starting Point
-
-OAuth demonstrates a familiar pattern: a user authorizes a registered third-party application through the service provider without sharing credentials.
-
-AI funding is more sensitive than playlist, profile, or file access:
-
-- cost varies by model and request,
-- long or agentic tasks may have uncertain final usage,
-- abuse can drain a budget quickly,
-- a Funding Principal may differ from the Resource User, and
-- consent must explain economic and privacy consequences.
-
-ABDS therefore uses OAuth as the authorization foundation while adding provider-side grants, structured economic authorization, ledgers, and funding-aware lifecycle rules.
-
-The analogy is helpful; it is not proof that AI billing delegation is simple.
+ABDS therefore profiles OAuth while adding Provider-side grants, structured economic authorization, execution accounting, and funding-aware lifecycle rules.
 
 ## Why Rich Authorization Requests Matter
 
-Simple scopes such as `ai.execute` are too coarse to express:
+A scope such as `ai.execute` cannot safely express:
 
-- 100 units per month,
-- economy text models only,
-- NatureGuard only,
-- no paid overage,
-- sponsored funding offer `X`, and
-- aggregate Sponsor reporting only.
+- maximum units and period;
+- per-request cap;
+- model, route, modality, or operation policy;
+- funding offer;
+- overage behavior; and
+- Sponsor reporting policy.
 
-OAuth 2.0 Rich Authorization Requests provides a standards-track mechanism for structured authorization details. ABDS can define an AI delegation type instead of inventing an expanding list of top-level OAuth query parameters.
+OAuth Rich Authorization Requests provides a standards-aligned carrier for this structured policy.
 
 ## Economic Case for Providers
 
-### Provider control is preserved
+ABDS preserves Provider control. A Provider can:
 
-ABDS does not force a Provider to expose a user's full subscription allowance or accept every Sponsor.
+- choose eligible plans and funding products;
+- define resource units and prices;
+- cap total, per-user, and per-request usage;
+- restrict models, routes, modalities, and tools;
+- require Client and Sponsor verification;
+- reserve high-variance workloads;
+- detect quota laundering and retry amplification;
+- expose only privacy-safe event data;
+- suspend abusive grants or programs; and
+- decide which funding types it supports.
 
-The Provider can:
-
-- define eligible plans and funding arrangements,
-- define resource units,
-- cap total and per-user delegated usage,
-- restrict model and operation classes,
-- require Client and Sponsor verification,
-- separate delegated traffic from enterprise throughput lanes,
-- stop abuse,
-- require reservations for expensive tasks,
-- offer paid delegated programs, and
-- decide which funding-source types it supports.
-
-### The market may expand rather than merely shift
-
-The strongest ABDS claim does not depend on an unsupported universal statistic about unused subscription quota.
-
-The more defensible argument is:
-
-- some applications are not launched under developer-funded API billing,
-- some users cannot or will not pay directly,
-- some organizations are willing to fund access for a defined community, and
-- a Provider can expose a bounded delegated product without opening its entire subscription economics.
-
-ABDS may therefore create usage and customers that do not exist under the current model.
-
-### Sponsored programs create a new commercial lane
-
-Sponsor-funded ABDS can be commercially additive:
-
-- a foundation prepays an impact program,
-- an employer buys a governed employee pool,
-- a university funds a student cohort,
-- a provider co-funds a launch promotion, or
-- a membership organization funds tools for its members.
-
-The standard does not dictate whether settlement occurs through credits, invoices, committed spend, or subscriptions. It standardizes authorization, enforcement, and reporting boundaries.
+ABDS may create demand that does not exist under developer-funded billing: public-interest applications, governed employee pools, student programs, accessibility tools, and Provider-funded promotions.
 
 ## The Provider CFO Objection
 
-A Provider may reasonably object that:
+A Provider may reasonably argue that delegation could increase utilization without sufficient revenue, cannibalize API sales, create fraud, increase support cost, or aggregate consumer subscriptions into wholesale capacity.
 
-- consumer subscriptions are priced for first-party use,
-- delegation could increase utilization without enough revenue,
-- apps could aggregate consumer grants into a wholesale API,
-- Sponsor programs may increase support and fraud costs, and
-- users may blame the Provider for third-party behavior.
+ABDS does not make those concerns disappear. It makes them governable:
 
-ABDS addresses these concerns by making Provider control explicit:
+- funding arrangements remain Provider-recognized;
+- grants are bounded and tied to Client, Beneficiary, audience, models, and operations;
+- every physical attempt is attributable;
+- reservations and caps limit loss;
+- abusive aggregation can be detected and revoked;
+- no paid overage occurs without authorization; and
+- Sponsor programs can be separate commercial products.
 
-- funding programs are Provider-recognized,
-- Clients and Sponsors can be registered and verified,
-- grants are bound to Client, Beneficiary, audience, models, and operations,
-- limits are provider-enforced,
-- aggregate resale can be detected and revoked,
-- no overage occurs without explicit authorization, and
-- Sponsors can be billed through a distinct commercial product.
+The proposal succeeds only if Provider economics remain sustainable.
 
 ## Why Sponsorship Must Not Become Surveillance
 
-Funding is economically valuable but can create power over Beneficiaries.
+Funding and data access are separate permissions. Sponsor funding does not authorize prompts, outputs, files, conversations, identity, precise location, or Client-internal workflow labels.
 
-ABDS therefore treats these as separate permissions:
-
-1. permission to fund AI usage, and
-2. permission to receive user data.
-
-The first does not imply the second.
-
-A Sponsor should receive aggregate program usage by default, not prompts, outputs, user identity, uploaded files, or conversation history. Broader reporting needs a separate purpose, authorization, and legal basis.
+Default Sponsor reporting should be aggregate and subject to privacy thresholds. Broader reporting requires a separate purpose, authorization, and legal basis.
 
 ## Why the Payer Must Never Change Silently
 
-A Sponsor program may end, pause, or run out of budget. The worst possible fallback is silently charging the user or developer.
+When a funding source ends or is exhausted, silently charging the user or developer breaks economic consent.
 
-ABDS requires a hard stop, an already-authorized alternative funding source, or fresh consent. This makes the economic promise testable:
+ABDS requires a hard stop, another already-authorized source, or fresh consent:
 
-> The party shown as paying is the party whose authorized funding source is charged.
+> The payer shown during authorization is the payer whose authorized funding bucket is settled.
 
-## Why This Should Be Open
+## Why Events Must Be Append-Only
 
-A single proprietary feature could validate the idea, but cross-provider fragmentation would force every Client to implement different funding semantics.
+Rewriting historical usage or price destroys reconciliation and dispute evidence. Accepted Usage Events and Ledger Events remain immutable. Corrections use compensating adjustments that identify the original event, actor, reason, and quantity.
 
-An open profile can provide:
+## Why the Proposal Should Be Open
 
-- familiar consent language,
-- common grant and error semantics,
-- portable Sponsor concepts,
-- consistent privacy expectations,
-- provider discovery, and
-- a path to interoperability testing.
+A proprietary feature could validate the concept but would force Clients to implement different delegation, event, error, and settlement semantics for each Provider.
 
-The near-term goal is not to claim a finished standard. It is to produce a precise proposal and runnable simulator that serious Provider, OAuth, security, nonprofit, and developer reviewers can challenge.
+An open profile can establish common consent language, grant semantics, event schemas, privacy expectations, Provider discovery, and interoperability tests.
 
 ## Conclusion
 
-ABDS is best understood as payer-neutral authorization for metered AI resources.
+ABDS v0.5 is best understood as payer-neutral authorization plus Provider-authoritative execution accounting for metered AI resources.
 
-Its core promise is not that AI becomes free. Its promise is that the Funding Principal becomes an explicit, bounded, revocable, provider-enforced choice - without exposing API keys and without granting funders automatic access to user content.
+Its promise is not free AI. Its promise is an explicit, bounded, revocable, attributable, auditable, privacy-preserving choice about who funds each authorized AI execution.
