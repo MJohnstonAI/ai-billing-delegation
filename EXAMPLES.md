@@ -1,274 +1,89 @@
-# ABDS Illustrative Examples
+# ABDS v0.5 Examples and Test Vectors
 
-> These examples describe a proposed protocol. All domains, endpoints, identifiers, models, tokens, units, and funding offers are fictional. They are not evidence that any AI Provider currently implements ABDS.
+This document indexes the current provider-neutral examples. Machine-readable files under `examples/` are intended for schema validation and future conformance tests.
 
-## 1. User-Funded Authorization Details
+All domains, identifiers, models, tokens, units, amounts, and funding offers are fictional. They are not evidence that any AI Provider implements ABDS.
 
-```json
-[
-  {
-    "type": "abds_ai_delegation",
-    "actions": ["ai.execute", "ai.usage.read"],
-    "locations": ["https://api.provider.example"],
-    "models": ["economy-text"],
-    "budget": {
-      "max_units": 100,
-      "unit_type": "provider_ai_unit",
-      "period": "monthly",
-      "per_request_max_units": 5,
-      "overage": "prohibited"
-    }
-  }
-]
+## 1. Usage Event With Retry and Fallback
+
+File: [`examples/usage-event-agent-fallback.json`](examples/usage-event-agent-fallback.json)
+
+Demonstrates:
+
+- one physical attempt under a logical request;
+- `requested_model` versus `resolved_model`;
+- fallback routing and retry reason;
+- token and tool-call dimensions;
+- Sponsor funding-bucket attribution;
+- pricing snapshot;
+- opaque workspace, feature, workflow, agent-run, and agent-step references;
+- trace and span correlation.
+
+Validate against:
+
+```text
+schemas/abds-usage-event-v0.5.schema.json
 ```
 
-The Resource User is also the Funding Principal.
+## 2. Reservation, Settlement, and Release Sequence
 
-## 2. Sponsor-Funded NatureGuard Authorization Details
+File: [`examples/reservation-settlement-sequence.json`](examples/reservation-settlement-sequence.json)
 
-```json
-[
-  {
-    "type": "abds_ai_delegation",
-    "actions": ["ai.execute", "ai.usage.read"],
-    "locations": ["https://api.provider.example"],
-    "models": ["economy-text", "economy-vision"],
-    "budget": {
-      "max_units": 100,
-      "unit_type": "provider_ai_unit",
-      "period": "monthly",
-      "per_request_max_units": 5,
-      "overage": "prohibited"
-    },
-    "funding_offer_id": "offer_natureguard_public_2026"
-  }
-]
+Demonstrates:
+
+1. a five-unit reservation;
+2. a three-unit settlement linked to the Usage Event;
+3. release of the unused two units;
+4. stable request, reservation, settlement, and idempotency identifiers;
+5. one consistent Sponsor funding bucket and price snapshot.
+
+Each array member validates against:
+
+```text
+schemas/abds-ledger-event-v0.5.schema.json
 ```
 
-The Authorization Server resolves the offer, verifies that NatureGuard is eligible, validates the Beneficiary, and displays the Sponsor terms.
+## 3. Logical Request With Several Physical Attempts
 
-The Client cannot choose a raw Sponsor account or `funding_source_id`.
-
-## 3. Authorization Request Construction
-
-```javascript
-async function startABDSAuthorization({
-  authorizationEndpoint,
-  clientId,
-  redirectUri,
-  authorizationDetails,
-  state,
-  codeChallenge
-}) {
-  const params = new URLSearchParams({
-    response_type: "code",
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    state,
-    code_challenge: codeChallenge,
-    code_challenge_method: "S256",
-    authorization_details: JSON.stringify(authorizationDetails)
-  });
-
-  window.location.assign(`${authorizationEndpoint}?${params}`);
-}
+```text
+req_88
+  att_88_1 - primary model timeout after partial inference
+  att_88_2 - retry or fallback attempt
+  att_88_3 - final successful route
 ```
 
-Production Clients must:
+Every billable physical attempt produces a separate Usage Event. One idempotent settlement may reference all billable events associated with the logical request and reservation.
 
-- obtain endpoints and supported capabilities through Provider discovery,
-- generate and verify `state`,
-- generate a fresh PKCE verifier and `S256` challenge,
-- use an exact registered redirect URI,
-- reject unknown issuers in multi-Provider flows, and
-- use Pushed Authorization Requests when required.
+## 4. Direct Debit Without Reservation
 
-## 4. Provider-side Grant
+A predictable low-cost operation may be directly debited when Provider policy permits it. It still requires:
 
-```json
-{
-  "delegation_id": "del_natureguard_abc123",
-  "beneficiary_subject": "usr_948201842",
-  "app_client_id": "app_natureguard",
-  "funding_source_type": "sponsor_budget",
-  "funding_source_id": "internal_funding_source_391",
-  "economic_authorizer_type": "sponsor_policy",
-  "sponsorship_program_id": "program_green_earth_2026",
-  "unit_type": "provider_ai_unit",
-  "quota_cap": 100,
-  "quota_period": "monthly",
-  "per_request_cap": 5,
-  "model_scope": ["economy-text", "economy-vision"],
-  "operation_scope": ["ai.execute", "ai.usage.read"],
-  "overage_policy": "prohibited",
-  "status": "active",
-  "created_at": "2026-07-18T10:00:00Z",
-  "expires_at": "2026-12-31T23:59:59Z"
-}
-```
+- Provider-measured usage;
+- a Usage Event;
+- a Ledger Event;
+- one funding bucket;
+- idempotent economic processing;
+- no silent payer substitution.
 
-`funding_source_id` is provider-internal and must not be copied into the Execution Token.
+## 5. Adjustment Instead of Historical Rewrite
 
-## 5. Execution Token
+When a Provider corrects a charge, the original event remains unchanged. A new `adjustment_posted` Ledger Event references the prior event, reason, actor, and positive or negative quantity.
 
-```json
-{
-  "iss": "https://auth.provider.example",
-  "sub": "usr_948201842",
-  "aud": "https://api.provider.example",
-  "iat": 1784368800,
-  "exp": 1784369700,
-  "jti": "tok_xyz789",
-  "client_id": "app_natureguard",
-  "delegation_id": "del_natureguard_abc123",
-  "scope": "ai.execute ai.usage.read",
-  "model_scope": ["economy-text", "economy-vision"],
-  "abds_version": "0.4"
-}
-```
+## 6. Negative Test Cases for Future Conformance Suite
 
-The token does not contain live quota, Sponsor balance, funding-source identifier, or settlement state.
+Implementations should reject or flag:
 
-## 6. Backend-Mediated AI Call
+- missing `delegation_id`, `request_id`, or `attempt_id`;
+- duplicate settlement identifiers;
+- one reservation reaching two terminal states;
+- settlement against a different funding bucket from the reservation;
+- `settled_quantity` exceeding the authorized envelope without overage consent;
+- Client attribution containing prompt text, secrets, emails, or customer names;
+- a fallback model outside the approved model scope;
+- a second payer selected after funding exhaustion without authorization;
+- an adjustment that does not reference an earlier ledger event;
+- event retrieval across another grant.
 
-```javascript
-async function callProvider({ executionToken, request }) {
-  const response = await fetch("https://api.provider.example/v1/inference", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${executionToken}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(request)
-  });
+## 7. Validation Requirements
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    return {
-      ok: false,
-      status: response.status,
-      error: result.error,
-      recovery: result.recovery
-    };
-  }
-
-  return { ok: true, result };
-}
-```
-
-The browser or mobile UI should call the Client's authenticated backend. Sensitive provider refresh and execution credentials should remain server-side.
-
-## 7. Grant-specific Usage Status
-
-```http
-GET /v1/abds/delegations/del_natureguard_abc123/usage
-Authorization: Bearer {short_lived_execution_token}
-```
-
-```json
-{
-  "delegation_id": "del_natureguard_abc123",
-  "unit_type": "provider_ai_unit",
-  "quota_cap": 100,
-  "quota_used": 47,
-  "quota_remaining": 53,
-  "quota_period": "monthly",
-  "quota_reset": "2026-08-01T00:00:00Z",
-  "status": "active",
-  "funding_display": {
-    "type": "sponsor_budget",
-    "name": "Green Earth Foundation"
-  }
-}
-```
-
-The Client sees only its grant-specific state. It does not receive the Sponsor's full pool balance or other Beneficiaries' activity.
-
-## 8. Sponsor Aggregate Report
-
-```json
-{
-  "sponsorship_program_id": "program_green_earth_2026",
-  "reporting_period": {
-    "starts_at": "2026-07-01T00:00:00Z",
-    "ends_at": "2026-08-01T00:00:00Z"
-  },
-  "aggregate_usage": {
-    "active_beneficiaries": 842,
-    "total_units_used": 28610,
-    "grants_created": 915,
-    "grants_revoked": 31,
-    "requests_denied_for_cap": 74
-  },
-  "content_visibility": "none",
-  "identity_visibility": "aggregate_only"
-}
-```
-
-Prompt, output, file, conversation, and identity access require separate authorization and are not implied by funding.
-
-## 9. Funding Exhaustion
-
-```json
-{
-  "error": "abds_funding_unavailable",
-  "error_description": "The authorized funding source cannot cover this request.",
-  "recovery": "stop_or_reauthorize"
-}
-```
-
-The response does not reveal the Sponsor's confidential balance.
-
-The Client must not silently retry using a user or developer funding source.
-
-## 10. Per-Beneficiary Cap Exhaustion
-
-```json
-{
-  "error": "abds_quota_exceeded",
-  "error_description": "This grant has reached its allowance for the current period.",
-  "quota_reset": "2026-08-01T00:00:00Z",
-  "recovery": "wait_or_reauthorize"
-}
-```
-
-## 11. Revocation
-
-```javascript
-function handleABDSFailure(result) {
-  switch (result.error) {
-    case "abds_token_revoked":
-    case "abds_sponsorship_ended":
-      return { requiresReauthorization: true };
-
-    case "abds_quota_exceeded":
-      return { allowanceExhausted: true };
-
-    case "abds_funding_unavailable":
-      return {
-        sponsoredAccessUnavailable: true,
-        allowSilentPayerFallback: false
-      };
-
-    default:
-      return { retryable: false };
-  }
-}
-```
-
-## 12. Discovery Check
-
-Before offering sponsored access, a Client should verify that Provider metadata includes:
-
-```json
-{
-  "abds_version": "0.4",
-  "profiles_supported": ["basic", "standard", "sponsored_funding"],
-  "authorization_details_types_supported": ["abds_ai_delegation"],
-  "funding_source_types_supported": ["user_entitlement", "sponsor_budget"],
-  "sponsorship_programs_supported": true
-}
-```
-
-The exact metadata field names remain draft until the discovery profile is registered and tested.
+A repository validation script should perform JSON Schema Draft 2020-12 validation and then enforce cross-event invariants that JSON Schema alone cannot express, including terminal-state uniqueness, settlement idempotency, funding-bucket consistency, and reservation arithmetic.
