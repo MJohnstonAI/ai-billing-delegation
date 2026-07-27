@@ -1,337 +1,213 @@
-# ABDS Sponsored Delegation Profile v0.4 (Draft)
+# ABDS Sponsored Delegation Profile v0.5 (Draft)
 
-> A payer-neutral extension for sponsor-funded AI usage.
+> Payer-neutral, privacy-preserving third-party funding for bounded AI usage.
 
 ## 1. Purpose
 
-The ABDS core model should not assume that the person using an AI application is also the party whose subscription or account pays for inference.
+This profile applies when a Sponsor, employer, university, government, donor, membership organization, or AI Provider funds AI usage for a Beneficiary through a registered Client.
 
-This profile covers cases where a third party funds bounded AI usage for an application's users. Examples include:
+The Sponsor funds a Provider-recognized budget or entitlement. The Provider remains the authorization, enforcement, measurement, and accounting authority. Covered usage is not charged to the Resource User or application developer.
 
-- a conservation foundation funding NatureGuard for the public,
-- a donor funding an educational tutor for students,
-- a company funding an approved employee assistant,
-- a university funding research tools,
-- a government program funding access to public services,
-- an AI provider funding a promotional allowance, and
-- a membership or patronage organization funding tools for its community.
+Sponsorship does not imply Sponsor access to prompts, outputs, files, conversations, precise location, identity, or individual behavior.
 
-The user does not pay the AI provider's inference cost for calls covered by the sponsor grant. The application developer does not pay that inference cost either. The sponsor funds a provider-recognized budget or entitlement, while the AI provider remains the enforcement and accounting authority.
-
-Sponsorship does not imply that the sponsor can see prompts, outputs, personal data, or individual behavior.
-
-## 2. Generalized ABDS Roles
-
-ABDS separates the following roles even when one party performs several of them:
+## 2. Roles
 
 | Role | Description |
 |---|---|
-| **Resource User** | Person using the AI-enabled application. |
-| **Beneficiary** | Person or class of people eligible to consume a funded allocation. Usually the Resource User. |
-| **Consumer Application / Client** | Registered application requesting and using an ABDS grant. |
-| **Funding Principal** | Party whose provider-recognized entitlement or budget is charged. |
-| **Economic Authorizer** | Party allowed to commit the Funding Principal's budget. |
-| **Sponsor** | A Funding Principal other than the Resource User or application developer. |
-| **AI Provider** | Authorization Server, Resource Server, grant service, and authoritative ledger operator. |
+| Resource User | Person using the Client |
+| Beneficiary | Person or class eligible for the funded allocation |
+| Client | Registered application requesting and using the grant |
+| Funding Principal | Sponsor whose Provider-recognized budget is charged |
+| Economic Authorizer | Sponsor administrator or policy permitted to commit the budget |
+| Provider | Authorization Server, Resource Server, grant service, execution gateway, and accounting authority |
 
-For user-funded ABDS, the Resource User, Beneficiary, Funding Principal, and Economic Authorizer may all be the same person.
-
-For sponsored ABDS, the Sponsor is the Funding Principal, a sponsor administrator or policy is the Economic Authorizer, and the Resource User is the Beneficiary.
-
-## 3. Payer-Neutral Four-Object Architecture
+## 3. v0.5 Architecture
 
 ```text
-Funding Entitlement or Budget
-        |
-Delegated AI Grant
-        |
-Short-lived Execution Token
-        |
-Provider-side Usage Ledger
+Sponsor Budget
+    -> Sponsorship Program / Funding Offer
+        -> Delegated AI Grant
+            -> Short-lived Execution Token
+                -> Provider Execution
+                    |-> Usage Event Plane
+                    |-> Economic Ledger Plane
 ```
 
-### 3.1 Funding Entitlement or Budget
+For each covered execution, the Provider can attribute:
 
-A provider-recognized source of AI resource units or monetary budget. The source may belong to:
+- the Sponsorship Program and funding bucket;
+- Client and pairwise-pseudonymous Beneficiary;
+- logical request and physical attempts;
+- requested and resolved model;
+- retry, fallback, route, workflow, and agent-step context;
+- measured resource dimensions; and
+- reservation, settlement, released quantity, and adjustment events.
 
-- an individual subscriber,
-- an organization,
-- a sponsor,
-- an AI provider promotional program, or
-- a developer account.
-
-The provider MAY settle the funding source through prepaid credits, an invoice, a subscription allowance, a committed-spend agreement, or another commercial arrangement. ABDS standardizes delegation and enforcement semantics, not the commercial settlement rail.
-
-### 3.2 Delegated AI Grant
-
-The provider-side grant binds:
-
-- the Client,
-- the Beneficiary or eligibility rule,
-- an opaque funding-source reference,
-- a bounded economic policy,
-- permitted models and operations,
-- consent and disclosure state,
-- lifecycle status, and
-- revocation authority.
-
-### 3.3 Short-lived Execution Token
-
-The token references the grant using `delegation_id`. It does not need to expose the Sponsor, funding-source identifier, live budget, or ledger state.
-
-### 3.4 Provider-side Usage Ledger
-
-The ledger records reservations, debits, settlements, releases, refunds, and denials against the applicable grant and funding source.
+Client observability metadata is untrusted and cannot change Sponsor billing or grant policy.
 
 ## 4. Sponsorship Program
 
-A Sponsor or AI Provider MAY define a Sponsorship Program before any user grant is created.
+A Sponsor or Provider MAY establish a program before individual grants exist.
 
 Recommended fields:
 
-| Field | Type | Description |
-|---|---|---|
-| `sponsorship_program_id` | string | Public reference safe to display to eligible users. |
-| `sponsor_id` | string | Provider-internal Sponsor identifier. |
-| `display_name` | string | Sponsor name shown during consent. |
-| `verified_domain` | string | Verified Sponsor domain, where available. |
-| `app_client_ids` | array | Clients eligible to consume the program budget. |
-| `total_budget` | object | Provider-defined cap and unit type for the program. |
-| `per_beneficiary_cap` | object | Maximum allocation for each Beneficiary and period. |
-| `per_request_cap` | object | Optional maximum for a single execution. |
-| `model_policy` | object | Permitted or excluded model classes. |
-| `operation_policy` | array | Permitted operations such as text generation or image analysis. |
-| `eligibility_policy` | object | Provider-enforced or sponsor-attested eligibility rules. |
-| `starts_at` | ISO 8601 | Program start. |
-| `ends_at` | ISO 8601 | Program end. |
-| `data_visibility` | object | Sponsor-visible usage and reporting categories. |
-| `status` | enum | `draft`, `active`, `paused`, `exhausted`, `ended`, or `revoked`. |
+| Field | Description |
+|---|---|
+| `sponsorship_program_id` | Public program reference |
+| `sponsor_id` | Provider-internal Sponsor identifier |
+| `display_name` | Verified Sponsor name shown during consent |
+| `app_client_ids` | Eligible Clients |
+| `total_budget` | Program cap and unit type |
+| `per_beneficiary_cap` | Per-Beneficiary cap and period |
+| `per_request_cap` | Optional request envelope |
+| `model_policy` | Permitted model classes, routes, or tiers |
+| `operation_policy` | Permitted operations and modalities |
+| `eligibility_policy` | Provider-enforced or attested eligibility |
+| `starts_at`, `ends_at` | Program duration |
+| `data_visibility` | Authorized Sponsor reporting categories |
+| `status` | `draft`, `active`, `paused`, `exhausted`, `ended`, or `revoked` |
 
-The Sponsorship Program is a policy and funding source. It is not an execution credential.
+A program is policy and funding state, not an execution credential.
 
-## 5. Authorization Model
+## 5. Authorization
 
-### 5.1 Two Distinct Authorizations
+Sponsored execution normally requires two distinct authorizations:
 
-Sponsored use normally requires two decisions:
+1. **Funding authorization:** the Economic Authorizer creates or approves the bounded Sponsor program.
+2. **User authorization:** the Resource User authorizes the Client and accepts the disclosed sponsorship terms.
 
-1. **Funding authorization:** the Sponsor authorizes a bounded program, eligible Client, beneficiary policy, and reporting policy.
-2. **User authorization:** the Resource User authorizes the Client to perform the disclosed AI operations and accepts the sponsorship terms.
+ABDS SHOULD use OAuth Rich Authorization Requests. `funding_offer_id` identifies a Provider-recognized offer already bound to eligible Clients or Beneficiaries. A Client MUST NOT name an arbitrary Sponsor account.
 
-These decisions MAY occur at different times. A Sponsor can create a program before any user joins it.
+The Authorization Server MUST validate Sponsor identity, program status, Client eligibility, Beneficiary eligibility, requested model and operation rights, limits, duration, and data-visibility policy.
 
-The provider MUST NOT treat sponsor funding approval as user consent to disclose personal data or process content beyond the Client's separately authorized purpose.
+## 6. Consent Screen
 
-### 5.2 Rich Authorization Request
+The Provider MUST show:
 
-ABDS SHOULD use OAuth 2.0 Rich Authorization Requests rather than adding an expanding set of top-level OAuth query parameters.
+- verified Client and developer;
+- verified Sponsor;
+- a clear statement that the Sponsor pays for covered usage;
+- per-user cap, period, and per-request limit;
+- program end or renewal behavior;
+- permitted models, routes, operations, and modalities;
+- whether any user charge is possible;
+- exhaustion and cancellation behavior;
+- Sponsor-visible reporting categories;
+- a statement that funding does not grant prompt or output access; and
+- user revocation controls.
 
-Illustrative, non-registered authorization detail:
+Example:
 
-```json
-[
-  {
-    "type": "abds_ai_delegation",
-    "actions": ["ai.execute", "ai.usage.read"],
-    "locations": ["https://api.provider.example"],
-    "models": ["standard-text", "vision-economy"],
-    "budget": {
-      "max_units": 100,
-      "period": "monthly",
-      "per_request_max_units": 5,
-      "overage": "prohibited"
-    },
-    "funding_offer_id": "offer_natureguard_public_2026"
-  }
-]
-```
+> Green Earth Foundation will fund up to 100 standard AI units per month for your use of NatureGuard. You will not be charged for covered usage. The foundation receives aggregate program reporting, not your prompts or NatureGuard's answers. Access stops when your allowance or the program budget is exhausted. You can disconnect NatureGuard at any time.
 
-The final authorization-details type requires a collision-resistant identifier and standards registration strategy. `abds_ai_delegation` is a draft placeholder.
+## 7. Grant and Funding Binding
 
-The Authorization Server MUST:
+A sponsored grant MUST bind:
 
-- validate that the funding offer exists and is active,
-- verify that the Client is eligible for the offer,
-- ensure the requested rights do not exceed sponsor policy,
-- ensure the Beneficiary is eligible,
-- present the effective grant after all reductions,
-- bind the resulting grant to the Client and Beneficiary, and
-- reject unknown or malformed authorization details.
+- `delegation_id`;
+- Client;
+- Beneficiary or eligibility rule;
+- `sponsorship_program_id`;
+- opaque Provider-side funding bucket;
+- cap, period, and request envelope;
+- model and operation policy;
+- overage policy;
+- reporting policy;
+- lifecycle status; and
+- revocation authority.
 
-Pushed Authorization Requests are RECOMMENDED when the request contains sensitive eligibility information, large structured policies, or higher-value grants.
-
-## 6. Sponsored Consent Screen
-
-The provider's consent screen MUST clearly show:
-
-- the verified Client and developer,
-- the verified Sponsor,
-- the statement that the Sponsor is paying for covered AI usage,
-- the maximum per-user allowance and period,
-- the program end date or renewal behavior,
-- permitted operations and model classes,
-- whether the user can incur any charge,
-- what happens when the sponsorship ends or is exhausted,
-- what usage information the Sponsor can see,
-- a clear statement that sponsorship alone does not grant prompt or output access,
-- the user's revocation path, and
-- links to applicable Client and Sponsor terms.
-
-Recommended plain-language example:
-
-> Green Earth Foundation will fund up to 100 standard AI units per month for your use of NatureGuard. You will not be charged for covered usage. The foundation can see aggregate program usage, but not your prompts or NatureGuard's answers. Access stops when your allowance or the program budget is exhausted. You can disconnect NatureGuard at any time.
-
-## 7. Grant Record Extensions
-
-The following fields extend the ABDS grant record:
-
-| Field | Required | Description |
-|---|---:|---|
-| `delegation_id` | Yes | Stable public grant reference. |
-| `beneficiary_subject` | Yes | Provider-side subject or pseudonymous Beneficiary reference. |
-| `app_client_id` | Yes | Bound Client identifier. |
-| `funding_source_type` | Yes | `user_entitlement`, `organization_budget`, `sponsor_budget`, `provider_promotion`, or `developer_account`. |
-| `funding_source_id` | Yes | Opaque provider-side funding reference. MUST NOT appear in bearer tokens. |
-| `economic_authorizer_type` | Yes | `user`, `organization_admin`, `sponsor_policy`, `provider_policy`, or `developer`. |
-| `sponsorship_program_id` | For sponsored grants | Public program reference. |
-| `quota_cap` | Yes | Per-grant cap in the declared unit type. |
-| `unit_type` | Yes | Provider-defined unit identifier. |
-| `quota_period` | Yes | Applicable accounting period. |
-| `per_request_cap` | No | Maximum units per execution. |
-| `model_scope` | No | Permitted model classes or families. |
-| `operation_scope` | Yes | Permitted AI operations. |
-| `overage_policy` | Yes | MUST be `prohibited` unless a separate payer has explicitly authorized overage. |
-| `data_visibility_policy` | Yes | Sponsor-visible reporting categories. |
-| `status` | Yes | Grant lifecycle status. |
-
-Live `quota_used`, `quota_remaining`, sponsor pool balance, and settlement state belong to the provider ledger and usage views, not the grant's authorization policy or execution token.
+The opaque funding bucket MUST NOT appear as a bearer-token claim. Live program balance, grant usage, reservations, and settlement remain Provider-side.
 
 ## 8. Execution and Accounting
 
-For every sponsored execution, the provider MUST:
+For each sponsored logical request, the Provider MUST:
 
-1. validate the execution token;
-2. bind the token to the correct Client, audience, and `delegation_id`;
-3. validate the Beneficiary and grant status;
-4. validate the Sponsorship Program and funding source;
-5. enforce model, operation, per-request, per-beneficiary, and program limits;
-6. reserve or debit usage atomically;
-7. execute only within the authorized envelope; and
-8. settle the actual usage in the provider ledger.
+1. validate the token, Client, audience, grant, Beneficiary, and program;
+2. enforce model, operation, route, request, Beneficiary, and total-program limits;
+3. reserve or debit the Sponsor bucket atomically;
+4. prevent execution outside the authorized envelope;
+5. emit one Usage Event for each billable physical attempt;
+6. retain requested and resolved model attribution;
+7. post idempotent Ledger Events;
+8. settle Provider-measured usage;
+9. release unused reserved quantity; and
+10. prohibit payer substitution.
 
-The provider SHOULD distinguish internally between:
+Every settled quantity maps to one `delegation_id` and one Sponsor funding bucket at settlement time.
 
-- a Beneficiary cap being exhausted,
-- a Sponsorship Program pool being exhausted,
-- a program being paused or ended,
-- a funding settlement failure, and
-- a provider policy denial.
+## 9. Sponsor Reporting
 
-The Client-facing error SHOULD reveal only the information required for safe recovery. It MUST NOT expose confidential Sponsor balances or risk decisions.
+The default Sponsor report SHOULD be limited to privacy-safe aggregates such as:
 
-## 9. No Silent Payer Substitution
+- total units consumed;
+- active Beneficiary count;
+- grant creation, revocation, denial, and exhaustion totals;
+- aggregate model, route, modality, or operation categories;
+- aggregate retries or failed-attempt cost where useful; and
+- fraud or policy alerts required to protect the program.
 
-This is a mandatory safety property.
+Sponsor reporting MUST NOT expose Client workspace, feature, workflow, agent, experiment, trace, or span references unless separately authorized and privacy-safe. Providers SHOULD suppress or aggregate small cohorts where individual activity could be inferred.
 
-When sponsored funding becomes unavailable, the provider and Client MUST NOT silently:
+## 10. No Silent Payer Substitution
 
-- charge the Resource User,
-- charge the application developer,
-- switch to a user's personal subscription allowance, or
+When Sponsor funding is exhausted, paused, ended, revoked, or unavailable, the Provider and Client MUST NOT silently:
+
+- charge the Resource User;
+- charge the developer;
+- switch to a personal subscription;
+- switch to another Sponsor; or
 - create paid overage.
 
-The request must stop, move to another already-authorized funding source, or obtain fresh explicit authorization from the new Funding Principal and affected user.
+Execution stops, uses another already-authorized funding source, or obtains fresh authorization.
 
-## 10. Privacy and Sponsor Visibility
+## 11. Program Changes and Revocation
 
-The default sponsor-visible dataset SHOULD be limited to:
+The Resource User can revoke the Client grant. The Sponsor can pause or end future funding subject to disclosed terms. The Provider can suspend abusive grants, Clients, or programs.
 
-- aggregate units consumed,
-- aggregate number of active Beneficiaries,
-- grant creation and revocation counts,
-- model or operation categories at an aggregate level,
-- denied or exhausted request counts, and
-- fraud or policy alerts necessary to protect the program.
+Fresh consent is required for a higher cap, broader models or operations, paid overage, new Funding Principal, broader Sponsor visibility, or material duration extension.
 
-The Sponsor MUST NOT receive prompts, outputs, conversation history, uploaded files, precise location, or user identity merely because it funds usage.
+In-flight work settles measured consumption and releases unused capacity according to the disclosed policy.
 
-Any broader data sharing requires a separate legal basis, purpose-specific authorization, and consent flow outside the economic delegation itself.
+## 12. Threats and Controls
 
-Providers SHOULD support privacy-preserving thresholds or aggregation for small cohorts where individual activity could otherwise be inferred.
+| Threat | Required control |
+|---|---|
+| Eligibility fraud | Eligibility enforcement, rate limits, per-Beneficiary caps, anomaly detection |
+| Sponsor impersonation | Provider-verified identity and Provider-controlled consent |
+| Funding-offer substitution | Bind offers to Client and Beneficiary |
+| Sponsor surveillance | Separate data authorization, aggregate reporting, privacy thresholds |
+| Silent payer fallback | Hard stop or fresh authorization |
+| Program-budget drain | Total, per-user, per-request, model, route, and agent limits; circuit breakers |
+| Retry-cost hiding | One Usage Event per physical attempt |
+| Cross-workspace charging | Pairwise opaque references and Client tenancy controls |
+| Duplicate settlement | Idempotency and unique settlement identifiers |
+| Policy bait-and-switch | Versioned policy and renewed consent for material expansion |
 
-## 11. Revocation and Program Changes
-
-The Resource User MUST be able to revoke the Client's grant.
-
-The Sponsor MUST be able to pause or end future funding, subject to disclosed program terms.
-
-The Provider MUST be able to suspend abusive grants or programs.
-
-Material changes to the following require renewed user authorization:
-
-- a higher per-user cap,
-- broader model or operation access,
-- paid overage,
-- a new Funding Principal,
-- broader Sponsor data visibility, or
-- a materially later program end date where the original consent was time-bounded.
-
-Reducing a cap or narrowing access does not require renewed consent, but the user SHOULD be notified when the change affects expected service.
-
-## 12. Sponsored Funding Threats
-
-| Threat | Example | Required mitigation |
-|---|---|---|
-| Eligibility fraud | Bots or ineligible users claim sponsored access. | Provider and Sponsor rate limits, eligibility proof, abuse detection, and per-beneficiary caps. |
-| Funding-offer substitution | A Client replaces one offer identifier with another. | Bind offers to registered Clients and validate at the Authorization Server. |
-| Sponsor impersonation | A malicious program claims a recognized charity is paying. | Verified Sponsor identity and domain display on provider-controlled consent. |
-| Sponsor surveillance | Funding is used to justify access to prompts or user identity. | Data minimization, separate consent, aggregate reporting defaults, and audit controls. |
-| Silent payer fallback | Exhausted sponsor budget is charged to the user. | Mandatory hard stop or renewed authorization. |
-| Budget draining | Attackers automate high-cost use against a program pool. | Per-user and per-request caps, reservations, anomaly detection, and program circuit breakers. |
-| Policy bait-and-switch | Sponsor broadens reporting or narrows benefits after consent. | Versioned policies, immutable consent receipts, and renewed consent for material changes. |
-| Cross-app laundering | One approved Client resells the sponsor budget to another app. | Client, audience, Beneficiary, model, and operation binding with provider-side enforcement. |
+See `THREAT_MODEL.md` for the full v0.5 threat model.
 
 ## 13. NatureGuard Example
 
 ```text
 Green Earth Foundation
-        funds
-NatureGuard Public AI Program
-        offers 100 standard units per person per month
-        |
-NatureGuard requests a sponsored ABDS grant
-        |
-Provider shows the user sponsor, limits, privacy, and end date
-        |
-User approves
-        |
-Provider creates a grant bound to NatureGuard + user + sponsor program
-        |
-NatureGuard uses a short-lived token
-        |
-Provider debits the sponsor program ledger
-        |
-User pays no covered inference cost
-Developer pays no covered inference cost
-Sponsor sees aggregate program usage, not prompts
+    -> creates NatureGuard Sponsor program
+        -> Provider shows payer, limits, privacy, and end date
+            -> user approves NatureGuard grant
+                -> Provider creates grant bound to Client + Beneficiary + Sponsor bucket
+                    -> NatureGuard uses short-lived token
+                        -> each model attempt emits a Usage Event
+                        -> Sponsor bucket is reserved and settled
+                        -> unused quantity is released
+                        -> Sponsor receives aggregate reporting only
 ```
 
-This scenario demonstrates why ABDS is better understood as payer-neutral AI resource delegation rather than only user-subscription delegation.
+## 14. Relationship to Core v0.5
 
-## 14. Open Questions
+This profile extends, but does not replace:
 
-1. Should sponsor eligibility be provider-attested, Sponsor-attested, or delegated to a trusted verifier?
-2. Should the core standard define minimum privacy aggregation thresholds?
-3. Should Sponsorship Programs support earmarked model classes but remain neutral about application content?
-4. How should refunds and credits be represented when a provider invoices in currency but enforces in resource units?
-5. Should sponsor-funded grants require a formal consent receipt profile?
-6. Should multiple Funding Principals be allowed to fund one grant, or should grants always resolve to one source at execution time?
-7. Which sponsorship-policy changes require renewed consent versus notification?
+- `SPEC.md`
+- `USAGE_ATTRIBUTION.md`
+- `RESERVATION_SETTLEMENT.md`
+- `IMPLEMENTATION_PROFILES.md`
+- `FLOWS.md`
 
-## 15. Standards References
-
-- [RFC 9396 - OAuth 2.0 Rich Authorization Requests](https://www.rfc-editor.org/rfc/rfc9396)
-- [RFC 9126 - OAuth 2.0 Pushed Authorization Requests](https://www.rfc-editor.org/rfc/rfc9126)
-- [RFC 9449 - OAuth 2.0 Demonstrating Proof of Possession](https://www.rfc-editor.org/rfc/rfc9449)
-- [RFC 9700 - Best Current Practice for OAuth 2.0 Security](https://www.rfc-editor.org/rfc/rfc9700)
-
+Where this profile conflicts with the canonical specification, `SPEC.md` controls.
