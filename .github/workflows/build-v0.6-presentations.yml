@@ -1,0 +1,61 @@
+name: Build ABDS v0.6 presentations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/generate_v06_presentation.js"
+      - ".github/workflows/build-v0.6-presentations.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-presentations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install presentation dependencies
+        run: npm install --no-save pptxgenjs
+
+      - name: Install PDF conversion dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libreoffice-impress fonts-liberation
+
+      - name: Generate PowerPoint
+        run: node scripts/generate_v06_presentation.js
+
+      - name: Generate PDF
+        run: |
+          mkdir -p /tmp/abds-pdf
+          libreoffice --headless --convert-to pdf --outdir /tmp/abds-pdf docs/ABDS_executive_technical_brief.pptx
+          mv /tmp/abds-pdf/ABDS_executive_technical_brief.pdf docs/ABDS_executive_technical_brief_fixed.pdf
+
+      - name: Verify generated files
+        run: |
+          test -s docs/ABDS_executive_technical_brief.pptx
+          test -s docs/ABDS_executive_technical_brief_fixed.pdf
+          file docs/ABDS_executive_technical_brief.pptx
+          file docs/ABDS_executive_technical_brief_fixed.pdf
+
+      - name: Commit generated presentation files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/ABDS_executive_technical_brief.pptx docs/ABDS_executive_technical_brief_fixed.pdf
+          if git diff --cached --quiet; then
+            echo "Presentation files are already current."
+          else
+            git commit -m "docs: regenerate ABDS v0.6 PowerPoint and PDF"
+            git push
+          fi
