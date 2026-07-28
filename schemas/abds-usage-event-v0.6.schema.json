@@ -1,0 +1,264 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:abds:schema:usage-event:0.6",
+  "title": "ABDS AI Call Usage Event v0.6",
+  "description": "Immutable usage event for one physical AI attempt with ordering, evidence provenance, and reconciliation state.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "usage_event_id",
+    "occurred_at",
+    "delegation_id",
+    "client_id",
+    "request_id",
+    "attempt_id",
+    "operation",
+    "provider",
+    "resolved_model",
+    "outcome",
+    "sequence_scope",
+    "sequence_number",
+    "usage_dimensions",
+    "billing",
+    "evidence",
+    "reconciliation"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.6"},
+    "usage_event_id": {"type": "string", "minLength": 8, "maxLength": 200},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "provider_reported_at": {"type": "string", "format": "date-time"},
+    "received_at": {"type": "string", "format": "date-time"},
+    "delegation_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "client_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "beneficiary_ref": {"type": "string", "maxLength": 200},
+    "sponsorship_program_id": {"type": "string", "maxLength": 200},
+    "consent_receipt_id": {"type": "string", "maxLength": 200},
+    "request_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "run_id": {"type": "string", "maxLength": 200},
+    "attempt_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "parent_attempt_id": {"type": "string", "maxLength": 200},
+    "reservation_id": {"type": "string", "maxLength": 200},
+    "settlement_id": {"type": "string", "maxLength": 200},
+    "idempotency_key": {"type": "string", "maxLength": 255},
+    "trace_id": {"type": "string", "maxLength": 64},
+    "span_id": {"type": "string", "maxLength": 32},
+    "causation_id": {"type": "string", "maxLength": 200},
+    "correlation_id": {"type": "string", "maxLength": 200},
+    "sequence_scope": {
+      "type": "string",
+      "enum": ["reservation", "run", "request", "attempt"]
+    },
+    "sequence_number": {"type": "integer", "minimum": 0},
+    "previous_event_id": {"type": "string", "maxLength": 200},
+    "operation": {"type": "string", "minLength": 1, "maxLength": 200},
+    "provider": {"type": "string", "minLength": 1, "maxLength": 200},
+    "route_provider": {"type": "string", "maxLength": 200},
+    "requested_model": {"type": "string", "maxLength": 300},
+    "resolved_model": {"type": "string", "minLength": 1, "maxLength": 300},
+    "model_revision": {"type": "string", "maxLength": 300},
+    "routing_reason": {
+      "type": "string",
+      "enum": ["primary", "fallback", "policy", "capacity", "safety", "cost", "other"]
+    },
+    "retry_count": {"type": "integer", "minimum": 0},
+    "retry_reason": {"type": "string", "maxLength": 200},
+    "response_shape": {"type": "string", "maxLength": 200},
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "completed_partial",
+        "cancelled",
+        "failed_before_inference",
+        "failed_after_partial_inference",
+        "timed_out",
+        "denied",
+        "superseded"
+      ]
+    },
+    "latency_ms": {"type": "integer", "minimum": 0},
+    "usage_dimensions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/usageDimension"}
+    },
+    "usage_measurements": {"$ref": "#/$defs/usageMeasurements"},
+    "billing": {"$ref": "#/$defs/billing"},
+    "evidence": {"$ref": "#/$defs/evidence"},
+    "reconciliation": {"$ref": "#/$defs/reconciliation"},
+    "client_attribution": {"$ref": "#/$defs/clientAttribution"}
+  },
+  "$defs": {
+    "usageDimension": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["type", "quantity", "unit"],
+      "properties": {
+        "type": {"type": "string", "minLength": 1, "maxLength": 200},
+        "quantity": {"type": "number", "minimum": 0},
+        "unit": {"type": "string", "minLength": 1, "maxLength": 100}
+      }
+    },
+    "measurementSet": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/usageDimension"}
+    },
+    "usageMeasurements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "estimated": {"$ref": "#/$defs/measurementSet"},
+        "gateway_observed": {"$ref": "#/$defs/measurementSet"},
+        "provider_reported": {"$ref": "#/$defs/measurementSet"},
+        "provider_final": {"$ref": "#/$defs/measurementSet"}
+      },
+      "anyOf": [
+        {"required": ["estimated"]},
+        {"required": ["gateway_observed"]},
+        {"required": ["provider_reported"]},
+        {"required": ["provider_final"]}
+      ]
+    },
+    "money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "currency"],
+      "properties": {
+        "value": {"type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$"},
+        "currency": {"type": "string", "pattern": "^[A-Z]{3}$"}
+      }
+    },
+    "billing": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["unit_type", "settled_quantity", "funding_source_type", "funding_bucket_ref"],
+      "properties": {
+        "unit_type": {"type": "string", "minLength": 1, "maxLength": 200},
+        "estimated_quantity": {"type": "number", "minimum": 0},
+        "reserved_quantity": {"type": "number", "minimum": 0},
+        "settled_quantity": {"type": "number", "minimum": 0},
+        "released_quantity": {"type": "number", "minimum": 0},
+        "funding_source_type": {
+          "type": "string",
+          "enum": [
+            "user_entitlement",
+            "organization_budget",
+            "sponsor_budget",
+            "provider_promotion",
+            "developer_account"
+          ]
+        },
+        "funding_bucket_ref": {"type": "string", "minLength": 1, "maxLength": 200},
+        "price_snapshot_id": {"type": "string", "maxLength": 200},
+        "amount": {"$ref": "#/$defs/money"}
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "status"],
+      "properties": {
+        "class": {
+          "type": "string",
+          "enum": ["provider_signed", "provider_reported", "gateway_attested"]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "provisional",
+            "reported",
+            "reconciled",
+            "variance_detected",
+            "disputed",
+            "adjusted",
+            "final"
+          ]
+        },
+        "issuer": {"type": "string", "maxLength": 500},
+        "provider_request_id": {"type": "string", "maxLength": 200},
+        "provider_event_id": {"type": "string", "maxLength": 200},
+        "provider_billing_record_ref": {"type": "string", "maxLength": 300},
+        "key_id": {"type": "string", "maxLength": 300},
+        "signature_format": {"type": "string", "maxLength": 100},
+        "payload_digest": {"type": "string", "pattern": "^sha256:[A-Fa-f0-9]{64}$"},
+        "signature": {"type": "string", "minLength": 16, "maxLength": 2000},
+        "signed_at": {"type": "string", "format": "date-time"},
+        "attested_at": {"type": "string", "format": "date-time"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {"class": {"const": "provider_signed"}},
+            "required": ["class"]
+          },
+          "then": {
+            "required": [
+              "issuer",
+              "provider_request_id",
+              "provider_event_id",
+              "key_id",
+              "signature_format",
+              "payload_digest",
+              "signature",
+              "signed_at"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {"class": {"const": "provider_reported"}},
+            "required": ["class"]
+          },
+          "then": {"required": ["issuer", "provider_request_id"]}
+        },
+        {
+          "if": {
+            "properties": {"class": {"const": "gateway_attested"}},
+            "required": ["class"]
+          },
+          "then": {"required": ["issuer", "attested_at"]}
+        }
+      ]
+    },
+    "reconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_required",
+            "pending",
+            "matched",
+            "variance_detected",
+            "adjusted",
+            "disputed",
+            "final"
+          ]
+        },
+        "reconciles_usage_event_id": {"type": "string", "maxLength": 200},
+        "reconciliation_event_id": {"type": "string", "maxLength": 200},
+        "provider_billing_record_ref": {"type": "string", "maxLength": 300},
+        "finalized_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "clientAttribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "workspace_ref": {"type": "string", "maxLength": 200},
+        "feature_ref": {"type": "string", "maxLength": 200},
+        "workflow_ref": {"type": "string", "maxLength": 200},
+        "workload_ref": {"type": "string", "maxLength": 200},
+        "agent_run_ref": {"type": "string", "maxLength": 200},
+        "agent_step_ref": {"type": "string", "maxLength": 200},
+        "experiment_ref": {"type": "string", "maxLength": 200}
+      }
+    }
+  }
+}
