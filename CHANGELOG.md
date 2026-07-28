@@ -1,49 +1,168 @@
 # ABDS Upgrade Change Control
 
-> Concise record of material changes between draft versions of the AI Billing Delegation Standard.
+> Concise record of material changes between draft versions of the Artificial Intelligence Billing Delegation Standard.
 
-This document is the primary version-to-version change-control summary. `SPEC.md` remains the canonical technical draft.
+`SPEC.md` remains the canonical technical draft. This file records the version-to-version upgrade.
 
 ## Version Summary
 
 | Version | Theme | Material outcome |
 |---|---|---|
 | v0.1 | Initial proposal | Introduced user-authorized AI usage delegation but incorrectly placed mutable quota state in token claims |
-| v0.2 | Four-object correction | Moved live quota to a Provider-side grant and ledger; established the grant-token-ledger separation |
-| v0.3 | OAuth hardening | Added OAuth terminology, PKCE, discovery, implementation profiles, threat model, and public `delegation_id` |
-| v0.4 | Payer-neutral funding | Added Funding Principal, Economic Authorizer, Beneficiary, Sponsor funding, Rich Authorization Requests, privacy rules, and no silent payer substitution |
-| v0.5 | Usage attribution and settlement | Added one usage event per physical model attempt, separate ledger events, reservation and settlement, retry/fallback attribution, schemas, examples, and synchronized documentation |
+| v0.2 | Four-object correction | Moved live quota to a Provider-side grant and ledger |
+| v0.3 | OAuth hardening | Added OAuth terminology, PKCE, discovery, profiles, threat model, and public `delegation_id` |
+| v0.4 | Payer-neutral funding | Added Funding Principal, Economic Authorizer, Beneficiary, Sponsor funding, privacy, and no silent payer substitution |
+| v0.5 | Usage attribution and settlement | Added one event per physical attempt, separate Ledger Events, reservation, settlement, schemas, and examples |
+| v0.6 | Evidence, consent, and reconciliation | Added scoped ordering, evidence provenance, Consent Receipts, late-usage reconciliation, replay controls, and negative tests |
 
-## v0.5 - Usage Attribution and Settlement
+## v0.6 — Evidence, Consent, and Reconciliation
 
 **Status:** Current draft.
 
 ### Problem addressed
 
-v0.4 could identify who authorized and funded a grant, but it did not fully standardize how Providers and application teams trace actual AI cost to product behavior. It also described reservation and settlement only at a high level.
+v0.5 defined who funded usage, which Client and physical attempts caused it, and how usage was reserved and settled. It did not fully standardize:
 
-### Added
+- whether a quantity was estimated, observed by a gateway, reported by a Provider, or cryptographically attested;
+- what exact economic and privacy terms were approved;
+- how distributed events are ordered;
+- how late or corrected Provider usage is reconciled; or
+- how a user and the application that generated high-volume traffic remain jointly attributable.
 
-- `USAGE_ATTRIBUTION.md`
-- `RESERVATION_SETTLEMENT.md`
-- `schemas/abds-usage-event-v0.5.schema.json`
-- `schemas/abds-ledger-event-v0.5.schema.json`
-- `examples/usage-event-agent-fallback.json`
-- `examples/reservation-settlement-sequence.json`
-- one immutable usage event per physical Provider execution attempt
-- separate requested-model and resolved-model fields
-- logical-request, retry, fallback, speculative, agent-run, and agent-step correlation
-- optional privacy-minimized Client attribution for workspace, feature, workflow, and experiment
-- separate immutable ledger events for reservation, settlement, release, expiry, denial, and adjustment
-- idempotency boundaries for reservation and settlement
-- append-only correction semantics through compensating adjustment events
-- historical pricing snapshots where monetary amounts are exposed
-- explicit distinction between internal upstream cost and the amount charged to the Funding Principal
-- Provider discovery metadata for event schemas and reservation capabilities
-- expanded implementation profiles and threat model
-- synchronized Mermaid diagrams, README, roadmap, and executive presentation
+### Added documents
 
-### Core architectural change
+- `USAGE_EVENT_SCHEMA.md`
+- `CONSENT_RECEIPT.md`
+- `EVIDENCE_RECONCILIATION.md`
+
+### Added schemas
+
+- `schemas/abds-usage-event-v0.6.schema.json`
+- `schemas/abds-consent-receipt-v0.6.schema.json`
+- `schemas/abds-reconciliation-event-v0.6.schema.json`
+
+### Added positive examples
+
+- `examples/gateway-attested-usage-event.json`
+- `examples/provider-signed-usage-event.json`
+- `examples/sponsor-consent-receipt.json`
+- `examples/late-usage-reconciliation.json`
+
+### Added negative fixtures
+
+- duplicate Usage Event replay;
+- duplicate settlement identifier;
+- unbound Consent Receipt;
+- conflicting event ordering;
+- mismatched provider-signature fixture;
+- late-usage double-charge arithmetic.
+
+### Core changes
+
+1. Added evidence classes:
+
+```text
+provider_signed
+provider_reported
+gateway_attested
+```
+
+2. Added evidence states:
+
+```text
+provisional
+reported
+reconciled
+variance_detected
+disputed
+adjusted
+final
+```
+
+3. Added usage-measurement provenance:
+
+```text
+estimated
+gateway_observed
+provider_reported
+provider_final
+```
+
+4. Added scoped event ordering:
+
+```text
+sequence_scope
+sequence_number
+previous_event_id
+```
+
+5. Added immutable Consent Receipts binding:
+
+```text
+grant
+Client
+Beneficiary
+payer
+spend ceiling
+model / operation / workload scope
+overage
+duration
+privacy
+revocation
+policy version
+integrity
+```
+
+6. Added append-only Reconciliation Events with the invariant:
+
+```text
+adjustment_quantity = provider_final_quantity - original_quantity
+```
+
+7. Required unique Execution Token `jti` and replay detection.
+
+8. Required high-volume traffic to remain attributable to both the delegated principal and the registered Client.
+
+### Compatibility
+
+- v0.6 preserves the v0.4 payer-neutral funding model.
+- v0.6 preserves the v0.5 Usage Event and Ledger Event separation.
+- v0.5 schema files remain unchanged and available.
+- A Provider may support both v0.5 and v0.6.
+- v0.6 support must be advertised through discovery.
+- Gateway-attested evidence is transitional and must not be described as Provider-signed.
+- No v0.6 field expands the funding, model, operation, workload, or data access authorized by the grant.
+
+### Migration guidance
+
+Implementers moving from v0.5 should:
+
+1. preserve existing v0.5 event identifiers and immutable history;
+2. add scoped event sequence metadata;
+3. distinguish estimated, gateway-observed, Provider-reported, and Provider-final usage;
+4. classify the evidence source;
+5. issue a Consent Receipt for new or materially changed grants;
+6. retain unique token `jti` and replay state;
+7. append Reconciliation Events for late or corrected usage;
+8. post compensating Ledger adjustments rather than rewriting settlements;
+9. preserve Client and Beneficiary attribution;
+10. advertise v0.6 capabilities in Provider metadata.
+
+## v0.5 — Usage Attribution and Settlement
+
+Added:
+
+- one immutable Usage Event per physical Provider attempt;
+- requested and resolved model separation;
+- logical request, retry, fallback, route, run, and step correlation;
+- optional privacy-minimized Client attribution;
+- separate immutable Ledger Events;
+- idempotent reservation and settlement;
+- append-only adjustment;
+- pricing snapshots;
+- schemas, examples, diagrams, discovery, profiles, and validation.
+
+Architectural change:
 
 ```text
 v0.4: Grant -> Token -> Provider Ledger
@@ -53,66 +172,44 @@ v0.5: Grant -> Token -> Provider Execution
                          |-> Economic Ledger Plane
 ```
 
-### Compatibility
-
-- v0.5 preserves the v0.4 payer-neutral grant model.
-- Existing `delegation_id`, funding-source, consent, revocation, and no-silent-payer-substitution semantics remain valid.
-- Providers can adopt usage-event reporting before exposing full monetary settlement data.
-- Client attribution fields are optional and untrusted for enforcement.
-- No v0.5 field authorizes broader model, operation, data, or funding access than the underlying grant.
-
-### Migration guidance
-
-Implementers moving from v0.4 should:
-
-1. keep grant policy and live balances Provider-side;
-2. generate a stable logical `request_id` and unique `attempt_id` for every physical attempt;
-3. emit immutable usage events for billable attempts;
-4. emit separate ledger events for economic mutations;
-5. introduce idempotent reservation and settlement where cost is variable;
-6. preserve pricing snapshots and use compensating events for corrections;
-7. treat workspace, feature, workflow, and agent labels as observability metadata only;
-8. update discovery metadata to advertise supported v0.5 schemas and capabilities.
-
-## v0.4 - Payer-Neutral and Sponsored Delegation
+## v0.4 — Payer-Neutral and Sponsored Delegation
 
 - separated Resource User, Beneficiary, Funding Principal, Economic Authorizer, Client, and Provider;
-- added user, organization, Sponsor, Provider-promotion, and developer funding-source types;
-- added Sponsor-funded programs and NatureGuard example;
-- adopted OAuth Rich Authorization Requests for structured economic policy;
-- separated grant authorization policy from ledger state;
-- established Sponsor privacy defaults;
+- added user, organization, Sponsor, Provider-promotion, and developer funding types;
+- adopted Rich Authorization Requests;
+- added Sponsor privacy;
 - prohibited silent payer substitution.
 
-## v0.3 - Discovery, Profiles, and Threat Model
+## v0.3 — Discovery, Profiles, and Threat Model
 
-- aligned terminology with OAuth Authorization Server, Resource Server, Client, and access-token concepts;
-- required PKCE for public clients;
-- introduced Provider discovery metadata;
-- introduced Basic, Standard, Advanced, and Sponsored implementation profiles;
+- aligned terminology with OAuth;
+- required PKCE for public Clients;
+- introduced Provider discovery;
+- introduced implementation profiles;
 - formalized the threat model;
-- clarified public `delegation_id` use;
-- strengthened backend and sender-constrained-token guidance.
+- clarified public `delegation_id`;
+- strengthened token handling.
 
-## v0.2 - Four-Object Architecture
+## v0.2 — Four-Object Architecture
 
-- removed mutable `quota_used` and remaining-quota state from execution-token claims;
-- introduced the Provider-maintained Delegated AI Grant;
-- introduced short-lived Execution Tokens referencing `delegation_id`;
-- introduced the Provider-side Usage Ledger;
-- distinguished token introspection from usage introspection;
-- added atomic enforcement, revocation, and usage-status concepts.
+- removed mutable quota from token claims;
+- introduced the Delegated AI Grant;
+- introduced short-lived Execution Tokens;
+- introduced the Provider-side ledger;
+- distinguished token introspection from usage status;
+- added atomic enforcement and revocation.
 
-## v0.1 - Initial Draft
+## v0.1 — Initial Draft
 
 - introduced the developer-cost and BYOK problem;
-- proposed user-authorized bounded AI usage;
+- proposed bounded user-authorized AI usage;
 - established the initial OAuth-style direction;
-- contained a critical design error by treating mutable quota as token state.
+- contained the critical mutable-quota token design error.
 
 ## Change-Control Rules
 
 - `main` contains the current canonical draft.
-- Material accepted changes must update this document and the `SPEC.md` changelog.
-- Historical events and draft versions are preserved through Git history and release tags, not parallel canonical branches.
-- A draft version number does not claim standards-body approval or Provider adoption.
+- Material accepted changes update this file and the `SPEC.md` changelog.
+- Historical drafts are preserved through Git history and release tags where available, not parallel canonical branches.
+- Published schema identifiers are not silently repurposed.
+- A draft version does not claim standards-body approval or Provider adoption.
