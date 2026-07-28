@@ -1,0 +1,38 @@
+{
+  "schema_version": "0.6",
+  "consent_receipt_id": "cr_natureguard_2026_01",
+  "delegation_id": "del_abc123",
+  "client_id": "app_natureguard",
+  "beneficiary_ref": "ben_pairwise_91",
+  "sponsorship_program_id": "program_green_earth_2026",
+  "funding_source_type": "sponsor_budget",
+  "funding_principal_display": "Green Earth Foundation",
+  "spend_ceiling": {
+    "quantity": 100,
+    "unit_type": "provider_ai_unit",
+    "period": "monthly"
+  },
+  "per_request_ceiling": {
+    "quantity": 5,
+    "unit_type": "provider_ai_unit"
+  },
+  "model_scope": ["economy-text", "economy-vision"],
+  "operation_scope": ["ai.generate.text", "ai.classify.image"],
+  "workload_scope": ["workload_public_report"],
+  "overage_policy": "prohibited",
+  "exhaustion_behavior": "hard_stop",
+  "policy_version": "policy_7",
+  "data_visibility": {
+    "sponsor_reporting": "aggregate_only",
+    "content_access": "not_granted_by_funding",
+    "identity_access": "not_granted_by_funding"
+  },
+  "revocation_uri": "https://provider.example/account/connected-apps/del_abc123",
+  "issued_at": "2026-07-28T05:50:00.000Z",
+  "effective_at": "2026-07-28T05:50:00.000Z",
+  "expires_at": "2026-12-31T23:59:59.000Z",
+  "issuer": "https://provider.example",
+  "integrity": {
+    "receipt_digest": "sha256:155d70c1c0810594664a3150bfab59b8e61c5a1b75c73493c4d46e2d0c358682"
+  }
+}
