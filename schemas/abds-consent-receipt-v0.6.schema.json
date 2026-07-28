@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:abds:schema:consent-receipt:0.6",
+  "title": "ABDS Consent Receipt v0.6",
+  "description": "Immutable receipt of the effective economic, workload, privacy, duration, and revocation terms approved for a Delegated AI Grant.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "consent_receipt_id",
+    "delegation_id",
+    "client_id",
+    "beneficiary_ref",
+    "funding_source_type",
+    "spend_ceiling",
+    "overage_policy",
+    "policy_version",
+    "data_visibility",
+    "issued_at",
+    "expires_at",
+    "issuer",
+    "integrity"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.6"},
+    "consent_receipt_id": {"type": "string", "minLength": 8, "maxLength": 200},
+    "delegation_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "client_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "beneficiary_ref": {"type": "string", "minLength": 1, "maxLength": 200},
+    "sponsorship_program_id": {"type": "string", "maxLength": 200},
+    "funding_source_type": {
+      "type": "string",
+      "enum": [
+        "user_entitlement",
+        "organization_budget",
+        "sponsor_budget",
+        "provider_promotion",
+        "developer_account"
+      ]
+    },
+    "funding_principal_display": {"type": "string", "maxLength": 300},
+    "spend_ceiling": {"$ref": "#/$defs/ceiling"},
+    "per_request_ceiling": {"$ref": "#/$defs/quantity"},
+    "model_scope": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "maxLength": 300}
+    },
+    "operation_scope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "maxLength": 200}
+    },
+    "workload_scope": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "maxLength": 200}
+    },
+    "overage_policy": {
+      "type": "string",
+      "enum": ["prohibited", "separately_authorized"]
+    },
+    "exhaustion_behavior": {
+      "type": "string",
+      "enum": ["hard_stop", "authorized_alternative_only", "fresh_authorization_required"]
+    },
+    "policy_version": {"type": "string", "minLength": 1, "maxLength": 200},
+    "data_visibility": {"$ref": "#/$defs/dataVisibility"},
+    "revocation_uri": {"type": "string", "format": "uri"},
+    "issued_at": {"type": "string", "format": "date-time"},
+    "effective_at": {"type": "string", "format": "date-time"},
+    "expires_at": {"type": "string", "format": "date-time"},
+    "issuer": {"type": "string", "format": "uri"},
+    "integrity": {"$ref": "#/$defs/integrity"}
+  },
+  "$defs": {
+    "quantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quantity", "unit_type"],
+      "properties": {
+        "quantity": {"type": "number", "exclusiveMinimum": 0},
+        "unit_type": {"type": "string", "minLength": 1, "maxLength": 200}
+      }
+    },
+    "ceiling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quantity", "unit_type", "period"],
+      "properties": {
+        "quantity": {"type": "number", "exclusiveMinimum": 0},
+        "unit_type": {"type": "string", "minLength": 1, "maxLength": 200},
+        "period": {
+          "type": "string",
+          "enum": ["request", "daily", "weekly", "monthly", "grant_lifetime", "custom"]
+        },
+        "period_seconds": {"type": "integer", "minimum": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"period": {"const": "custom"}}},
+          "then": {"required": ["period_seconds"]}
+        }
+      ]
+    },
+    "dataVisibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sponsor_reporting", "content_access"],
+      "properties": {
+        "sponsor_reporting": {"type": "string", "enum": ["none", "aggregate_only", "custom"]},
+        "content_access": {"const": "not_granted_by_funding"},
+        "identity_access": {
+          "type": "string",
+          "enum": ["not_granted_by_funding", "separately_authorized"]
+        },
+        "custom_categories": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "maxLength": 200}
+        }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["receipt_digest"],
+      "properties": {
+        "receipt_digest": {"type": "string", "pattern": "^sha256:[A-Fa-f0-9]{64}$"},
+        "key_id": {"type": "string", "maxLength": 300},
+        "signature_format": {"type": "string", "maxLength": 100},
+        "signature": {"type": "string", "minLength": 16, "maxLength": 2000},
+        "signed_at": {"type": "string", "format": "date-time"}
+      }
+    }
+  }
+}
