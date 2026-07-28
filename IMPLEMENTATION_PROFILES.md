@@ -1,15 +1,15 @@
-# ABDS Implementation Profiles v0.5
+# ABDS Implementation Profiles v0.6
 
-> Draft maturity profiles for staged ABDS adoption.
+> Draft maturity profiles for staged adoption.
 
-These profiles are not conformance badges. Do not claim “ABDS compliant” until a formal checklist and test suite exist.
+These profiles are not formal certification. Do not claim standards compliance or Provider endorsement merely by using these labels.
 
 ## Profile Summary
 
 | Profile | Purpose |
 |---|---|
 | Basic | Minimal safe delegated AI resource consumption |
-| Standard | Production consumer support with attributable usage events |
+| Standard | Production consumer support with Consent Receipts and attributable Usage Events |
 | Advanced / Enterprise | High-assurance, high-quota, routed, streaming, batch, or agentic workloads |
 | Sponsored Funding | Third-party funding with separate Sponsor and Beneficiary roles |
 
@@ -18,29 +18,28 @@ These profiles are not conformance badges. Do not claim “ABDS compliant” unt
 Required:
 
 - OAuth Authorization Code Flow;
-- PKCE for public clients;
-- structured economic authorization using the ABDS Rich Authorization Request type or documented transitional equivalent;
-- Provider consent showing funding terms;
+- PKCE for public Clients;
+- Provider-controlled economic consent;
 - Provider-side Delegated AI Grant;
-- short-lived Execution Token containing `delegation_id`;
-- no mutable quota or settlement state in token claims;
-- Provider-side Usage Ledger;
+- short-lived Execution Token containing `delegation_id`, `client_id`, and unique `jti`;
+- no mutable quota, price, reservation, or settlement state in token claims;
+- Provider-side accounting;
 - usage-status endpoint;
-- immediate user revocation;
+- immediate revocation;
 - basic discovery metadata;
-- structured quota, revocation, expiry, funding, and scope errors;
 - explicit funding-source type;
 - no silent payer substitution;
 - Provider-measured billable usage;
-- stable logical request identifier for support and audit correlation.
+- stable logical `request_id`;
+- one immutable Provider audit record per settled logical request.
 
 Recommended:
 
-- backend-mediated token handling for consumer apps;
-- app registration before economic scopes are granted;
-- per-Client rate limiting;
-- connected-apps dashboard;
-- immutable Provider audit record for each settled logical request.
+- backend-mediated token handling;
+- Client registration;
+- per-Client rate limits;
+- connected-app dashboard;
+- sender constraint for higher-value grants.
 
 ## Standard Implementation Profile
 
@@ -48,30 +47,37 @@ Required:
 
 - everything in Basic;
 - Rich Authorization Request validation;
-- registered app identity on consent screens;
+- registered Client identity on consent screens;
+- immutable Consent Receipt conforming to v0.6;
 - model and operation scope enforcement;
-- audience-restricted tokens and replay correlation through `jti`;
-- refresh-token rotation where refresh tokens are issued;
+- workload scope enforcement where the Provider exposes it;
+- audience-restricted tokens and replay detection through `jti`;
 - per-delegation rate limits and anomaly detection;
-- one immutable Usage Event for each billable physical model attempt;
-- unique `usage_event_id`, logical `request_id`, and physical `attempt_id`;
-- separate `requested_model` and `resolved_model` fields where routing or aliases exist;
+- one immutable Usage Event per billable physical attempt;
+- unique `usage_event_id`, `request_id`, and `attempt_id`;
+- scoped event sequence number;
+- separate requested and resolved model where routing or aliases exist;
 - visible retry and fallback attribution;
-- extensible usage dimensions with published meanings and units;
-- separate immutable Ledger Events for economic state transitions;
+- published usage dimensions and units;
+- explicit evidence class;
+- separate immutable Ledger Events;
 - idempotent settlement or direct debit;
-- grant-specific usage/event retrieval or equivalent Provider support tooling;
-- ABDS v0.5 discovery metadata;
+- grant-specific usage and event retrieval;
+- v0.6 discovery metadata;
 - graceful reauthorization after revocation or expiry.
+
+Evidence requirement:
+
+- direct Provider implementations SHOULD emit `provider_reported` or `provider_signed` evidence;
+- transitional gateways MAY emit `gateway_attested` evidence but MUST mark it provisional and reconcile it where Provider records are available.
 
 Recommended:
 
-- privacy-minimized workspace, feature, workflow, agent-run, and agent-step correlation;
+- privacy-minimized workload, workflow, feature, workspace, run, and step correlation;
 - OpenTelemetry trace and span correlation;
-- sender-constrained tokens for elevated risk;
-- consent receipts;
-- signed usage or settlement receipts;
-- cost and quota alerts.
+- Provider-signed Consent Receipts;
+- cost and quota alerts;
+- signed webhook delivery.
 
 ## Advanced / Enterprise Implementation Profile
 
@@ -79,29 +85,29 @@ Required:
 
 - everything in Standard;
 - risk-based sender-constrained tokens such as DPoP or mTLS;
-- reservation and settlement for variable-cost streaming, multimodal, batch, routed, or agentic operations;
+- reservation and settlement for variable-cost operations;
 - atomic active-reservation plus settled-balance enforcement;
 - partial completion, cancellation, timeout, and Provider-failure accounting;
-- pending reconciliation state;
-- hierarchical request, agent-run, agent-step, and tool-call budgets where applicable;
-- retry, fallback, speculative, and failover attempt attribution;
-- one terminal reservation state;
-- idempotent reservation, settlement, release, and adjustment operations;
-- append-only correction through compensating events;
+- Provider-signed events, signed settlement receipts, or equivalent high-assurance evidence;
+- reconciliation of gateway, router, delayed, or invoice-level Provider records;
+- hierarchical request, run, step, and tool budgets where applicable;
+- retry, fallback, speculative, and failover attribution;
+- one terminal reservation finalization;
+- idempotent reservation, settlement, release, reconciliation, and adjustment;
+- append-only correction;
 - historical pricing snapshots when monetary amounts are exposed;
-- organization-level delegated grants where applicable;
 - administrative revocation and audit export;
-- app verification tiers and fraud-risk scoring;
+- signing-key rotation and verification failure handling;
 - Provider investigation tooling.
 
 Recommended:
 
 - Pushed Authorization Requests;
-- fine-grained model, route, modality, and tool controls;
-- signed webhooks with replay protection;
+- fine-grained model, route, modality, workload, and tool controls;
+- batch signatures or verifiable inclusion proofs for high-volume events;
 - program and grant circuit breakers;
 - privacy-preserving aggregate analytics;
-- automated schema and invariant validation.
+- automated schema, signature, and invariant validation.
 
 ## Sponsored Funding Profile
 
@@ -112,21 +118,21 @@ Required:
 - Provider-recognized funding offer;
 - Client-bound offer and Beneficiary eligibility enforcement;
 - total program, per-Beneficiary, and per-request caps;
-- consent showing payer, duration, limits, exhaustion behavior, and Sponsor visibility;
+- Consent Receipt showing payer, duration, limits, exhaustion behavior, workload scope, and Sponsor visibility;
 - grant binding to Client, Beneficiary, and funding source;
 - aggregate Sponsor reporting by default;
 - program pause, exhaustion, end, and revocation states;
-- no prompt, output, file, conversation, or identity access implied by funding;
-- no fallback to user or developer funding without fresh authorization;
+- no content or identity access implied by funding;
+- no fallback to user or developer funding without authorization;
 - versioned funding and visibility policy;
 - renewed consent for material expansion;
 - every settled event mapped to one Sponsor funding bucket;
-- Sponsor reports that exclude Client observability metadata unless independently authorized and privacy-safe.
+- Sponsor reports excluding Client observability metadata unless independently authorized and privacy-safe;
+- dual attribution to Beneficiary and registered Client.
 
 Recommended:
 
 - Pushed Authorization Requests for eligibility-bearing requests;
-- consent receipts;
 - minimum cohort thresholds;
 - program-level circuit breakers;
 - independent Sponsor and Client verification;
@@ -138,16 +144,19 @@ Recommended:
 | Capability | Basic | Standard | Advanced | Sponsored |
 |---|---:|---:|---:|---:|
 | Provider-side grant and ledger | Required | Required | Required | Required |
-| One event per billable physical attempt | Recommended | Required | Required | Required |
+| Unique token `jti` and replay correlation | Required | Required | Required | Required |
+| Consent Receipt | Recommended | Required | Required | Required |
+| One event per physical attempt | Recommended | Required | Required | Required |
 | Requested/resolved model separation | Optional | Required when applicable | Required | Required when applicable |
-| Retry/fallback attribution | Optional | Required | Required | Required |
-| Reservation and settlement | Optional | Risk-based | Required for variable cost | Risk-based / high variance |
-| Partial settlement and reconciliation | Optional | Optional | Required | Risk-based |
-| Client workflow/agent attribution | Optional | Recommended | Required where used | Privacy-constrained |
-| Signed event delivery | Optional | Recommended | Recommended | Recommended |
+| Scoped event ordering | Optional | Required | Required | Required |
+| Explicit evidence class | Optional | Required | Required | Required |
+| Provider-signed evidence | Optional | Recommended | Required or equivalent | Recommended |
+| Gateway reconciliation | Optional | Required when gateway evidence is used | Required | Required when gateway evidence is used |
+| Reservation and settlement | Optional | Risk-based | Required for variable cost | Risk-based |
+| Client workload attribution | Optional | Recommended | Required where used | Privacy-constrained |
 | Sponsor privacy controls | N/A | N/A | As applicable | Required |
 
-## Non-Compliance Language
+## Conformance Language
 
 Prefer:
 
@@ -157,12 +166,12 @@ Implements the ABDS Standard Implementation Profile
 Implements the ABDS Advanced / Enterprise Implementation Profile
 ```
 
-Do not use formal compliance language until conformance tests exist.
+Do not use “certified,” “official,” “approved,” or Provider adoption language until a formal program and evidence exist.
 
 ## Open Questions
 
-1. Should reservation be mandatory in Standard for all streaming calls?
-2. Which Usage Event fields form the minimum interoperability core?
-3. Should signed receipts be Standard or Advanced?
-4. Which failed and speculative attempts may be billable?
-5. Should Sponsor funding remain a standalone profile or a capability layered onto Standard?
+1. Should Provider-signed evidence be required in Standard?
+2. Which signature and canonicalization profile should be mandatory?
+3. Which Consent Receipt fields form the minimum core?
+4. When must Standard reserve streaming work?
+5. How should batch and invoice reconciliation operate?
