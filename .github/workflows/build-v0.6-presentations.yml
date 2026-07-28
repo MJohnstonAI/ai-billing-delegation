@@ -11,6 +11,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: abds-v0.6-presentations
+  cancel-in-progress: false
+
 jobs:
   build-presentations:
     runs-on: ubuntu-latest
