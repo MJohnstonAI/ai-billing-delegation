@@ -1,41 +1,58 @@
 {
   "schema_version": "0.6",
   "usage_event_id": "uev_provider_01JZ8Q9A",
-  "occurred_at": "2026-07-28T05:58:20.000Z",
-  "observed_at": "2026-07-28T05:58:21.000Z",
-  "provider_reported_at": "2026-07-28T06:01:10.000Z",
-  "received_at": "2026-07-28T06:01:10.100Z",
+  "occurred_at": "2026-07-28T06:02:00.000Z",
+  "observed_at": "2026-07-28T06:02:01.000Z",
+  "received_at": "2026-07-28T06:02:01.100Z",
   "delegation_id": "del_abc123",
   "client_id": "app_natureguard",
   "beneficiary_ref": "ben_pairwise_91",
   "sponsorship_program_id": "program_green_earth_2026",
   "consent_receipt_id": "cr_natureguard_2026_01",
-  "request_id": "req_88",
-  "run_id": "run_abc",
-  "attempt_id": "att_88_1_provider_final",
-  "reservation_id": "res_88",
+  "request_id": "req_89",
+  "run_id": "run_provider_native",
+  "attempt_id": "att_89_1",
+  "reservation_id": "res_89",
   "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
   "span_id": "00f067aa0ba902b7",
   "sequence_scope": "reservation",
-  "sequence_number": 2,
-  "previous_event_id": "uev_gateway_01JZ8Q8V",
+  "sequence_number": 1,
   "operation": "ai.generate.text",
   "provider": "provider.example",
   "route_provider": "provider.example",
   "requested_model": "economy-text",
   "resolved_model": "economy-text-2026-07-15",
-  "model_revision": "2026-07-15",
   "routing_reason": "primary",
   "retry_count": 0,
   "outcome": "completed",
-  "latency_ms": 1700,
+  "latency_ms": 1650,
   "usage_dimensions": [
-    {"type": "input_tokens", "quantity": 1240, "unit": "token"},
-    {"type": "output_tokens", "quantity": 300, "unit": "token"}
+    {
+      "type": "input_tokens",
+      "quantity": 1240,
+      "unit": "token"
+    },
+    {
+      "type": "output_tokens",
+      "quantity": 300,
+      "unit": "token"
+    }
   ],
   "usage_measurements": {
-    "provider_reported": [{"type": "provider_ai_unit", "quantity": 3.0, "unit": "unit"}],
-    "provider_final": [{"type": "provider_ai_unit", "quantity": 3.0, "unit": "unit"}]
+    "provider_reported": [
+      {
+        "type": "provider_ai_unit",
+        "quantity": 3.0,
+        "unit": "unit"
+      }
+    ],
+    "provider_final": [
+      {
+        "type": "provider_ai_unit",
+        "quantity": 3.0,
+        "unit": "unit"
+      }
+    ]
   },
   "billing": {
     "unit_type": "provider_ai_unit",
@@ -45,33 +62,34 @@
     "funding_source_type": "sponsor_budget",
     "funding_bucket_ref": "bucket_pairwise_7f2",
     "price_snapshot_id": "price_2026_07_standard_text",
-    "amount": {"value": "0.0048", "currency": "USD"}
+    "amount": {
+      "value": "0.0048",
+      "currency": "USD"
+    }
   },
   "evidence": {
     "class": "provider_signed",
     "status": "final",
     "issuer": "https://provider.example",
-    "provider_request_id": "prov_req_782",
-    "provider_event_id": "prov_evt_993",
+    "provider_request_id": "prov_req_900",
+    "provider_event_id": "prov_evt_901",
     "key_id": "provider-test-key-2026-07",
-    "signature_format": "JWS-HS256-test-only",
-    "signed_at": "2026-07-28T06:01:10.000Z",
-    "payload_digest": "sha256:957eb0eb3e9e52826234100a743883d1cbc317a1c5ca1793ea2ab9177091e606",
-    "signature": "6AdFARcWbkU93DuemIvNPRPraQcO9EP7w-8UTHQb20M"
+    "signature_format": "HMAC-SHA256-test-only",
+    "signed_at": "2026-07-28T06:02:01.000Z",
+    "payload_digest": "sha256:34939e43f083f80304dc35242bdf166d7a3b93426c50f3e49b9837569eb695bd",
+    "signature": "uWxn0VBSPiYloyNDpKXQlI30JrZ6Vkxdu78j_n0JhpM"
   },
   "reconciliation": {
-    "status": "final",
-    "reconciles_usage_event_id": "uev_gateway_01JZ8Q8V",
-    "reconciliation_event_id": "rev_01JZ8QAB",
-    "provider_billing_record_ref": "billing_record_884",
-    "finalized_at": "2026-07-28T06:01:11.000Z"
+    "status": "not_required"
   },
   "client_attribution": {
     "workspace_ref": "ws_pseudo_42",
     "feature_ref": "feature_report_draft",
     "workflow_ref": "workflow_incident_triage",
     "workload_ref": "workload_public_report",
-    "agent_run_ref": "run_abc",
-    "agent_step_ref": "step_04"
-  }
+    "agent_run_ref": "run_provider_native",
+    "agent_step_ref": "step_01"
+  },
+  "model_revision": "2026-07-15",
+  "provider_reported_at": "2026-07-28T06:02:01.000Z"
 }
