@@ -1,6 +1,6 @@
-# ABDS v0.5 Flow and Architecture Diagrams
+# ABDS v0.6 Flow and Architecture Diagrams
 
-These diagrams summarize the current canonical model. `SPEC.md` controls where a diagram and normative text differ.
+These diagrams summarize the current draft. `SPEC.md` controls where normative text and diagrams differ.
 
 ## 1. Payer-Neutral Authorization Core
 
@@ -11,202 +11,184 @@ flowchart LR
     S[Sponsor Budget]
     P[Provider Promotion]
     D[Developer Account]
+    C[Consent Receipt]
     G[Delegated AI Grant]
     T[Short-lived Execution Token]
     X[Provider Execution]
 
-    U --> G
-    O --> G
-    S --> G
-    P --> G
-    D --> G
+    U --> C
+    O --> C
+    S --> C
+    P --> C
+    D --> C
+    C --> G
     G --> T
     T --> X
 ```
 
-## 2. v0.5 Two-Plane Architecture
+## 2. Accounting and Evidence Planes
 
 ```mermaid
 flowchart TD
-    X[Provider Execution]
-    X --> U[Usage Event Plane]
+    X[Provider Execution] --> U[Usage Event Plane]
     X --> L[Economic Ledger Plane]
 
-    U --> U1[Logical request and physical attempt]
-    U --> U2[Provider, route, requested and resolved model]
-    U --> U3[Tokens, modalities, tools, latency, outcome]
-    U --> U4[Optional workspace, feature, workflow, agent and trace refs]
+    U --> A[Attempt identity, route, model, dimensions]
+    U --> E[Evidence provenance]
+    E --> G[Gateway-attested]
+    E --> R[Provider-reported]
+    E --> S[Provider-signed]
+    G --> Q[Reconciliation]
+    R --> Q
+    S --> Q
+    Q --> L
 
-    L --> L1[Reservation created]
-    L --> L2[Settlement posted]
-    L --> L3[Reservation released or expired]
-    L --> L4[Execution denied]
-    L --> L5[Compensating adjustment]
+    L --> L1[Reservation]
+    L --> L2[Settlement]
+    L --> L3[Release or Expiry]
+    L --> L4[Compensating Adjustment]
 ```
-
-Provider accounting is authoritative. Client observability labels cannot change the billed quantity or payer.
 
 ## 3. Attribution Hierarchy
 
 ```mermaid
 flowchart TD
     FS[Funding Source] --> DG[Delegated AI Grant]
-    DG --> C[Client]
-    C --> B[Beneficiary / Workspace]
+    DG --> C[Registered Client]
+    C --> B[Beneficiary]
     B --> R[Logical Request]
-    R --> WF[Workflow / Feature]
-    WF --> AR[Agent Run]
+    R --> W[Workload / Workflow]
+    W --> AR[Agent Run]
     AR --> AS[Agent Step]
-    AS --> A1[Physical Attempt]
+    AS --> A1[Primary Attempt]
+    AS --> A2[Retry]
+    AS --> A3[Fallback]
 ```
 
-## 4. Logical Request Versus Physical Attempts
+The delegated principal and registered Client remain separately attributable.
+
+## 4. Run-Level Reservation With Child Events
 
 ```mermaid
-flowchart LR
-    R[Logical Request req_88] --> A1[Attempt 1: primary model timeout]
-    R --> A2[Attempt 2: retry failed after partial inference]
-    R --> A3[Attempt 3: fallback model completed]
+flowchart TD
+    RR[Run-level Reservation] --> S1[Agent Step 1]
+    RR --> S2[Agent Step 2]
+    S1 --> A1[Model Attempt]
+    S1 --> A2[Retry]
+    S2 --> A3[Fallback]
     A1 --> U1[Usage Event]
     A2 --> U2[Usage Event]
     A3 --> U3[Usage Event]
-    U1 --> S[One idempotent settlement]
-    U2 --> S
-    U3 --> S
+    U1 --> ST[One Terminal Settlement]
+    U2 --> ST
+    U3 --> ST
 ```
 
-A final successful response does not erase the cost of previous billable attempts.
-
-## 5. User-Funded Delegation
+## 5. Consent Receipt and Grant
 
 ```mermaid
 sequenceDiagram
-    participant U as Resource User
-    participant A as Consumer Application
+    participant A as Client
     participant AS as Provider Authorization Server
+    participant U as Resource User
     participant G as Grant Service
-    participant API as AI Resource Server
-    participant L as Provider Ledger
 
-    U->>A: Start AI feature
-    A->>AS: Authorization request with authorization_details
-    AS->>U: Show Client, payer, cap, models, overage, privacy
-    U->>AS: Approve or reduce cap
-    AS->>G: Create grant against eligible entitlement
-    G-->>AS: delegation_id
-    AS-->>A: Authorization code
-    A->>AS: Exchange code with PKCE
-    AS-->>A: Short-lived Execution Token
-    A->>API: Logical request
-    API->>G: Validate grant and funding status
-    API->>L: Reserve or debit atomically
-    L-->>API: Authorized envelope
-    API-->>A: Result
-    API->>L: Settle actual usage and release remainder
+    A->>AS: Structured authorization request
+    AS->>U: Show payer, ceiling, scope, privacy, expiry, revocation
+    U->>AS: Approve or reduce request
+    AS->>AS: Issue immutable Consent Receipt
+    AS->>G: Create grant bound to receipt
+    G-->>A: authorization code
+    A->>AS: Exchange code using PKCE
+    AS-->>A: Short-lived token with delegation_id and jti
 ```
 
-## 6. Sponsor-Funded NatureGuard
+## 6. Gateway Evidence Reconciled With Provider Evidence
+
+```mermaid
+sequenceDiagram
+    participant A as Client
+    participant GW as ABDS Gateway
+    participant P as AI Provider
+    participant E as Event Store
+    participant L as Ledger
+
+    A->>GW: Logical request
+    GW->>L: Reserve run envelope
+    GW->>P: Provider request
+    P-->>GW: Response + provider_request_id
+    GW->>E: Gateway-attested provisional Usage Event
+    GW->>L: Provisional or policy-defined settlement
+    P-->>GW: Later Provider usage or billing record
+    GW->>E: Provider-reported or Provider-signed evidence
+    GW->>E: Append Reconciliation Event
+    alt Quantity matches
+        GW->>L: No economic change
+    else Quantity differs
+        GW->>L: Idempotent compensating adjustment
+    end
+```
+
+## 7. Provider-Signed Evidence
+
+```mermaid
+flowchart LR
+    P[Provider Usage Event] --> C[Canonical Payload]
+    C --> D[SHA-256 Digest]
+    D --> S[Provider Signature]
+    S --> V[Verifier]
+    K[Provider Key Discovery] --> V
+    V --> R[Verified / Failed]
+```
+
+Production signatures should use asymmetric keys. High-volume systems may verify inclusion in a signed batch.
+
+## 8. Event Ordering
+
+```mermaid
+flowchart LR
+    E1[Sequence 1: Gateway observed] --> E2[Sequence 2: Provider reported]
+    E2 --> E3[Sequence 3: Reconciliation]
+    E3 --> E4[Sequence 4: Adjustment]
+```
+
+Ordering is scoped to a reservation, run, request, or attempt. ABDS does not require one global sequence.
+
+## 9. Late Usage and Correction
+
+```mermaid
+flowchart TD
+    O[Original Usage Event] --> S[Original Settlement]
+    P[Late Provider Record] --> R[Reconciliation Event]
+    O --> R
+    R --> M{Variance?}
+    M -->|No| F[Final / Matched]
+    M -->|Yes| A[Compensating Ledger Adjustment]
+```
+
+The original event and settlement remain immutable.
+
+## 10. Sponsor-Funded NatureGuard
 
 ```mermaid
 sequenceDiagram
     participant S as Green Earth Foundation
-    participant AS as Provider Authorization Server
+    participant AS as Provider
     participant U as NatureGuard User
     participant A as NatureGuard
-    participant G as Grant Service
-    participant API as AI Resource Server
     participant L as Sponsor Ledger
 
-    S->>AS: Create bounded Sponsor program
-    Note over S,AS: Total cap, per-user cap, models, end date, reporting policy
+    S->>AS: Create bounded funding program
     U->>A: Start sponsored feature
-    A->>AS: Request grant with funding_offer_id
-    AS->>AS: Validate Sponsor, Client, and eligibility
-    AS->>U: Show Sponsor pays; no silent fallback
+    A->>AS: Request grant with funding offer
+    AS->>U: Show Sponsor, limits, workload, privacy, no payer fallback
     U->>AS: Approve
-    AS->>G: Create grant bound to Client + Beneficiary + funding bucket
-    G-->>AS: delegation_id
-    AS-->>A: Authorization code and token exchange
-    A->>API: AI request
-    API->>L: Reserve Sponsor allocation
-    API-->>A: Result
-    API->>L: Settle measured usage
+    AS-->>U: Consent Receipt
+    AS-->>A: Grant and short-lived token
+    A->>AS: AI request
+    AS->>L: Reserve Sponsor allocation
+    AS->>L: Settle Provider-final usage
     Note over U,S: Sponsor sees aggregate reporting only by default
-```
-
-## 7. Reservation and Settlement State Machine
-
-```mermaid
-stateDiagram-v2
-    [*] --> Active: reservation_created
-    Active --> Settled: settlement_posted
-    Active --> Released: reservation_released
-    Active --> Expired: reservation_expired
-    Settled --> Adjusted: adjustment_posted
-    Released --> [*]
-    Expired --> [*]
-    Adjusted --> [*]
-```
-
-## 8. Streaming and Partial Completion
-
-```mermaid
-sequenceDiagram
-    participant A as Client
-    participant API as Provider API
-    participant L as Ledger
-    participant M as Model
-
-    A->>API: Request with maximum output and idempotency key
-    API->>L: Create reservation
-    L-->>API: reservation_id
-    API->>M: Execute within envelope
-    M-->>API: Stream partial output and measured usage
-    A--xAPI: User cancels or disconnects
-    API->>M: Stop future generation
-    API->>L: Settle consumed quantity
-    API->>L: Release unused quantity
-    API-->>A: Partial-completion status
-```
-
-## 9. Retry and Fallback Accounting
-
-```mermaid
-sequenceDiagram
-    participant A as Client
-    participant R as Provider Router
-    participant P1 as Primary Model
-    participant P2 as Fallback Model
-    participant E as Event Store
-    participant L as Ledger
-
-    A->>R: Logical request req_88
-    R->>P1: Attempt att_1
-    P1-->>R: Timeout after partial inference
-    R->>E: Usage Event att_1
-    R->>P1: Retry att_2
-    P1-->>R: Capacity failure
-    R->>E: Usage Event att_2
-    R->>P2: Fallback att_3
-    P2-->>R: Completed
-    R->>E: Usage Event att_3
-    R->>L: One idempotent settlement referencing billable events
-    R-->>A: Final response
-```
-
-## 10. Privacy Boundaries
-
-```mermaid
-flowchart LR
-    U[Resource User] -->|authorizes| P[AI Provider]
-    A[Client] -->|opaque workflow and trace refs| P
-    P -->|grant-specific usage and errors| A
-    S[Sponsor] -->|funding policy| P
-    P -->|aggregate program report| S
-
-    C[Prompts / Outputs / Files / Identity]
-    C -. not granted by funding .-> S
-    A -. no access to unrelated plan or Sponsor balance .-> P
 ```
 
 ## 11. Funding Unavailable
@@ -223,5 +205,5 @@ sequenceDiagram
     L-->>API: Exhausted, paused, expired, or revoked
     API-->>A: abds_funding_unavailable
     A-->>U: Explain funded access is unavailable
-    Note over A,U: No charge to another payer without prior authorization or fresh consent
+    Note over A,U: No silent charge to another payer
 ```
