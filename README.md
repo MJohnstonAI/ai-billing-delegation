@@ -1,9 +1,9 @@
 # AI Billing Delegation Standard (ABDS)
 
-> A payer-neutral OAuth profile for bounded, provider-enforced AI resource funding, execution accounting, and cost attribution.
+> A payer-neutral OAuth profile for bounded, provider-enforced AI resource funding, execution accounting, evidence, consent, and reconciliation.
 
 ![Status: Draft Proposal](https://img.shields.io/badge/status-draft%20proposal-yellow)
-![Spec: v0.5](https://img.shields.io/badge/spec-v0.5-blue)
+![Spec: v0.6](https://img.shields.io/badge/spec-v0.6-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
 
@@ -11,266 +11,268 @@
 
 Consumer AI applications commonly force one of three approaches:
 
-1. the developer absorbs unpredictable inference costs,
-2. the user supplies an API key or buys app-specific credits, or
+1. the developer absorbs unpredictable inference cost;
+2. the user supplies an API key or buys app-specific credits; or
 3. every application rebuilds billing, metering, quota, and abuse controls.
 
-ABDS proposes a provider-enforced alternative:
+ABDS proposes a Provider-enforced alternative:
 
-> A user, organization, sponsor, provider promotion, or developer can authorize a bounded AI grant, while the AI Provider enforces consent, limits, model and operation policy, execution accounting, settlement, revocation, and payer attribution.
+> A user, organization, Sponsor, Provider promotion, or developer can authorize a bounded AI grant while the AI Provider enforces consent, limits, workload and model policy, execution accounting, evidence, settlement, revocation, and payer attribution.
 
-ABDS is not a payment rail and does not promise free compute. It defines how a Provider can safely answer five questions for every covered AI execution:
-
-- **Who authorized the resources?**
-- **Who benefited from the execution?**
-- **Which application, workflow, and model attempts caused the usage?**
-- **Which funding bucket was charged?**
-- **How were estimated, reserved, settled, released, or corrected amounts recorded?**
+ABDS is not a payment rail, a BYOK wrapper, or a claim that any Provider has adopted the proposal.
 
 ## Canonical Reading Order
 
-Human reviewers and AI systems should read the repository in this order:
+Human reviewers and AI systems should read:
 
-1. [README.md](README.md) - purpose and current architecture
-2. [CHANGELOG.md](CHANGELOG.md) - concise version-to-version change control
-3. [SPEC.md](SPEC.md) - canonical v0.5 normative draft
-4. [USAGE_ATTRIBUTION.md](USAGE_ATTRIBUTION.md) - usage events and cost attribution
-5. [RESERVATION_SETTLEMENT.md](RESERVATION_SETTLEMENT.md) - variable-cost execution accounting
-6. [FLOWS.md](FLOWS.md) - Mermaid architecture and sequence diagrams
-7. [THREAT_MODEL.md](THREAT_MODEL.md) - OAuth, economic, attribution, and settlement risks
-8. [IMPLEMENTATION_PROFILES.md](IMPLEMENTATION_PROFILES.md) - staged adoption profiles
-9. [DISCOVERY.md](DISCOVERY.md) - provider capability metadata
+1. [README.md](README.md) — purpose and current architecture
+2. [CHANGELOG.md](CHANGELOG.md) — version-to-version change control
+3. [SPEC.md](SPEC.md) — canonical v0.6 normative draft
+4. [USAGE_ATTRIBUTION.md](USAGE_ATTRIBUTION.md) — attribution architecture
+5. [USAGE_EVENT_SCHEMA.md](USAGE_EVENT_SCHEMA.md) — v0.6 event interoperability contract
+6. [RESERVATION_SETTLEMENT.md](RESERVATION_SETTLEMENT.md) — variable-cost execution accounting
+7. [CONSENT_RECEIPT.md](CONSENT_RECEIPT.md) — immutable approved terms
+8. [EVIDENCE_RECONCILIATION.md](EVIDENCE_RECONCILIATION.md) — evidence hierarchy and late usage
+9. [FLOWS.md](FLOWS.md) — architecture and sequence diagrams
+10. [THREAT_MODEL.md](THREAT_MODEL.md) — OAuth, economic, evidence, and privacy risks
+11. [IMPLEMENTATION_PROFILES.md](IMPLEMENTATION_PROFILES.md) — staged adoption profiles
+12. [DISCOVERY.md](DISCOVERY.md) — Provider capability metadata
 
-Historical AI reviews are useful evidence, but they do not override the canonical v0.5 documents.
+Historical reviews and earlier commits are research context, not current normative guidance.
 
-## From Legacy ABDS to v0.5
+## Evolution
 
-### Legacy model
-
-Earlier ABDS drafts focused mainly on authorizing a bounded funding source and preventing mutable quota from being embedded in a bearer token:
+### Authorization core
 
 ```text
-Funding Entitlement
+Funding Entitlement or Budget
     -> Delegated AI Grant
         -> Short-lived Execution Token
-            -> Provider-side Usage Ledger
+            -> Provider Execution
 ```
 
-### Current v0.5 model
+### v0.5 accounting extension
 
-v0.5 keeps that four-object authorization core and adds two coordinated, append-only event planes:
-
-```mermaid
-flowchart LR
-    F[Funding Entitlement or Budget] --> G[Delegated AI Grant]
-    G --> T[Short-lived Execution Token]
-    T --> X[Provider Execution]
-
-    X --> U[Usage Event Plane]
-    U --> U1[User / Workspace]
-    U --> U2[App / Feature / Workflow]
-    U --> U3[Agent Run / Step]
-    U --> U4[Provider / Model / Attempt]
-    U --> U5[Tokens / Modalities / Latency]
-
-    X --> L[Economic Ledger Plane]
-    L --> L1[Estimate]
-    L --> L2[Reserve]
-    L --> L3[Settle]
-    L --> L4[Release / Expire]
-    L --> L5[Refund / Adjustment]
+```text
+Provider Execution
+    |-> Usage Event Plane
+    |-> Economic Ledger Plane
 ```
 
-The Provider Accounting Plane is authoritative for enforcement and settlement. Client-supplied workflow labels are observability metadata only and cannot change the billed quantity, funding source, or grant policy.
+### v0.6 trust extension
 
-## Payer-Neutral Core Architecture
+```text
+Consent Receipt
+    -> Delegated AI Grant
+        -> Run-level Reservation
+            -> Physical Usage Events
+                -> Provider Evidence
+                    -> Reconciliation
+                        -> Settlement or Adjustment
+```
+
+v0.6 preserves the payer-neutral v0.4 model and the v0.5 usage and settlement architecture. It adds evidence provenance, scoped ordering, formal consent receipts, and append-only reconciliation.
+
+## Core Architecture
 
 ```mermaid
 flowchart TD
-    U[User Entitlement]
-    O[Organization Budget]
-    S[Sponsor Budget]
-    P[Provider Promotion]
-    D[Developer Account]
-    G[Delegated AI Grant]
-    T[Short-lived Execution Token]
-    E[AI Resource Server]
-    A[Append-only Usage and Ledger Events]
-
-    U --> G
-    O --> G
-    S --> G
-    P --> G
-    D --> G
-    G --> T
-    T --> E
-    E --> A
+    F[Funding Source] --> C[Consent Receipt]
+    C --> G[Delegated AI Grant]
+    G --> T[Short-lived Execution Token]
+    T --> X[Provider Execution]
+    X --> U[Usage Event Plane]
+    X --> L[Economic Ledger Plane]
+    U --> E[Evidence: Gateway / Provider-reported / Provider-signed]
+    E --> R[Reconciliation]
+    R --> L
 ```
 
 ### Critical separation
 
-- The **grant** contains authorization policy.
+- The **Consent Receipt** records the terms approved at a point in time.
+- The **grant** contains current Provider-side authorization policy.
 - The **token** references and narrows the grant.
-- The **usage event** records what technically occurred.
-- The **ledger event** records the economic state transition.
-- The **Provider** remains authoritative for live balances and settlement.
+- The **Usage Event** records one physical execution attempt.
+- The **evidence object** identifies who asserts the usage facts.
+- The **Reconciliation Event** compares earlier observations with later Provider evidence.
+- The **Ledger Event** records economic state transitions.
+- The **Provider** remains authoritative for grant state, measured usage, funding selection, and settlement.
 
-## Usage Attribution Hierarchy
+## Evidence Hierarchy
+
+| Evidence class | Meaning | Authority |
+|---|---|---|
+| `provider_signed` | Provider event or receipt with cryptographic integrity | Provider-native target |
+| `provider_reported` | Authenticated Provider response, usage export, or billing record | Provider evidence |
+| `gateway_attested` | Intermediary observation or estimate | Provisional until reconciled |
+
+A gateway must not represent its own estimate as Provider-authoritative evidence.
+
+For high-volume systems, a Provider may sign event batches or a Merkle root rather than every individual event, provided each event has a verifiable inclusion proof.
+
+## Usage Lifecycle
+
+```text
+estimated
+    -> gateway_observed
+        -> provider_reported
+            -> reconciled
+                -> final
+```
+
+Late or corrected usage creates a new Reconciliation Event. Any resource or monetary correction creates a compensating Ledger Event. Original events remain immutable.
+
+## Usage Attribution
 
 ```mermaid
 flowchart TD
     FS[Funding Source] --> DG[Delegated AI Grant]
-    DG --> C[Client]
-    C --> BW[Beneficiary or Workspace]
-    BW --> R[Logical Request]
-    R --> WF[Workflow / Feature]
-    WF --> AR[Agent Run]
+    DG --> C[Registered Client]
+    C --> B[Beneficiary]
+    B --> R[Logical Request]
+    R --> W[Workload / Workflow]
+    W --> AR[Agent Run]
     AR --> AS[Agent Step]
-    AS --> PA1[Physical Attempt 1]
-    AS --> PA2[Physical Attempt 2 - Retry]
-    AS --> PA3[Physical Attempt 3 - Fallback]
+    AS --> A1[Primary Attempt]
+    AS --> A2[Retry]
+    AS --> A3[Fallback]
 ```
 
-One logical request can create multiple billable physical attempts. Failed, timed-out, superseded, speculative, safety, routing, or fallback attempts must not be hidden inside the final successful response.
+High-volume traffic remains attributable to both the delegated principal and the Client that generated it. A user must not appear to be the sole source of retries, speculative execution, routing, background work, or agent loops created by an application.
+
+Client-supplied workspace, feature, workload, workflow, agent, experiment, trace, and span references are untrusted observability metadata. They cannot change the billed quantity or payer.
+
+## Consent Receipt
+
+A v0.6 Consent Receipt binds:
+
+```text
+delegation_id
+client_id
+beneficiary_ref
+funding source
+spend ceiling
+per-request ceiling
+model / operation / workload scope
+overage and exhaustion behavior
+privacy and Sponsor reporting
+effective period
+revocation path
+policy version
+integrity evidence
+```
+
+Funding does not grant access to prompts, outputs, files, conversations, precise location, or identity.
+
+## Execution Token
+
+A v0.6 Execution Token requires:
+
+```text
+iss
+aud
+client_id
+delegation_id
+jti
+iat
+exp
+scope
+abds_version
+```
+
+It must be short-lived, audience-restricted, replay-correlated through a unique `jti`, and bound to the registered Client. Mutable quota, price, funding balance, reservation, and settlement state remain Provider-side.
 
 ## Reservation and Settlement
-
-```mermaid
-stateDiagram-v2
-    [*] --> Estimated
-    Estimated --> Reserved: atomic hold
-    Reserved --> Executing
-    Executing --> Settled: actual measured usage
-    Executing --> Released: no billable usage
-    Executing --> PartiallySettled: cancellation / timeout
-    Reserved --> Expired: reservation timeout
-    PartiallySettled --> Released: unused quantity
-    Settled --> Adjusted: compensating event only
-```
-
-The accounting sequence is:
 
 ```text
 Authorize -> Estimate -> Reserve -> Execute -> Settle -> Release
 ```
 
-Every economic mutation must be idempotent. Accepted usage and ledger events are immutable; corrections use compensating adjustment events rather than rewriting history.
-
-## Core Design Principles
-
-1. **Mutable economic state does not belong in bearer-token claims.**
-2. **Provider grant and ledger state remain authoritative.**
-3. **One physical provider attempt produces one usage event.**
-4. **Usage facts and economic ledger mutations are separate event families.**
-5. **Requested and resolved models are separate fields.**
-6. **Retries and fallbacks remain visible and attributable.**
-7. **Funding does not imply access to prompts, outputs, files, or identity.**
-8. **A failed funding source cannot silently shift cost to another payer.**
-9. **Client attribution metadata cannot alter Provider accounting.**
-10. **Historical events retain the pricing snapshot used at settlement time.**
-
-## OAuth Alignment
-
-| ABDS function | Standards-aligned pattern |
-|---|---|
-| User authorization | Authorization Code Flow with PKCE |
-| Structured economic policy | OAuth 2.0 Rich Authorization Requests |
-| Sensitive authorization request | Pushed Authorization Requests |
-| Short-lived execution token | OAuth 2.0 Token Exchange |
-| Target AI API binding | OAuth 2.0 Resource Indicators |
-| Sender constraint | DPoP or mTLS for higher-risk grants |
-| Revocation | Token revocation plus Provider grant management |
-| Capability discovery | Authorization Server Metadata extensions or ABDS metadata |
-
-ABDS adds the AI-specific layer: funding-aware grants, economic consent, usage attribution, reservation and settlement, append-only accounting, privacy boundaries, and payer-safe lifecycle rules.
+Every economic mutation must be idempotent. One reservation reaches one terminal finalization. Accepted Usage, Reconciliation, and Ledger Events are append-only.
 
 ## NatureGuard Example
 
-A conservation foundation funds public NatureGuard usage:
+A conservation foundation funds bounded public NatureGuard usage:
 
-- a total program cap,
-- a monthly per-user cap,
-- NatureGuard as the eligible Client,
-- approved text and vision model classes,
-- no paid overage,
-- aggregate Sponsor reporting only,
-- an explicit end date, and
-- no fallback to user or developer funding without fresh authorization.
-
-Each NatureGuard request can be traced from the Sponsor program to the grant, user or workspace, feature, workflow, agent step, provider route, actual model attempts, measured dimensions, reservation, final settlement, and any release or adjustment. Sponsor funding still does not grant access to prompts or responses.
-
-See [SPONSORED_DELEGATION.md](SPONSORED_DELEGATION.md).
+- NatureGuard is the registered Client;
+- a user is the Beneficiary;
+- the foundation is the Funding Principal;
+- the Provider issues a Consent Receipt;
+- a run-level reservation limits the request;
+- retries and fallback attempts produce separate Usage Events;
+- gateway observations are reconciled against Provider evidence;
+- one settlement charges the Sponsor funding bucket;
+- unused capacity is released;
+- Sponsor reporting is aggregate by default;
+- no fallback charges the user or developer without prior authorization or fresh consent.
 
 ## What ABDS Is Not
 
 ABDS is not:
 
-- free or unlimited compute,
-- a way to bypass Provider billing,
-- a money-transfer or card-payment standard,
-- a client-side quota counter,
-- a BYOK wrapper,
-- automatic Sponsor access to user data,
-- a universal AI currency,
-- a blockchain proposal,
-- a replacement for enterprise contracts, or
-- a finished or provider-adopted standard.
+- free or unlimited compute;
+- a mechanism to bypass Provider billing;
+- a card-payment or money-transfer standard;
+- client-side quota accounting;
+- a BYOK wrapper;
+- automatic Sponsor access to user data;
+- a universal AI currency;
+- a blockchain proposal;
+- a finished or Provider-adopted standard.
 
 ## Repository Status
 
 - [x] Payer-neutral grant architecture
-- [x] User, organization, Sponsor, Provider-promotion, and developer funding types
 - [x] Short-lived tokens without mutable quota claims
 - [x] Rich Authorization Request alignment
-- [x] No-silent-payer-substitution rule
-- [x] Sponsor privacy defaults
-- [x] Provider discovery proposal
-- [x] Implementation profiles
-- [x] Threat model
-- [x] Append-only usage-event profile
-- [x] Separate ledger-event profile
-- [x] Reservation and settlement profile
-- [x] Retry, fallback, and agent-step attribution
-- [x] Machine-readable JSON Schemas and worked examples
-- [x] v0.5 diagrams and executive presentation
-- [ ] Consent receipt profile
-- [ ] Reference simulator
-- [ ] Conformance test suite
-- [ ] External Provider, OAuth, accounting, and privacy review
+- [x] Sponsor privacy and no silent payer substitution
+- [x] One Usage Event per physical model attempt
+- [x] Separate append-only Ledger Events
+- [x] Reservation and idempotent settlement
+- [x] Retry, fallback, route, and agent-step attribution
+- [x] v0.5 JSON Schemas and validation
+- [x] v0.6 Usage Event ordering and evidence provenance
+- [x] v0.6 Consent Receipt profile and schema
+- [x] v0.6 Reconciliation Event profile and schema
+- [x] Positive and negative v0.6 test fixtures
+- [ ] Provider-native implementation
+- [ ] ABDS Studio reference simulator
+- [ ] Independent Provider and OAuth review
+- [ ] Formal conformance certification program
 
 ## Documents
 
 | File | Description |
 |---|---|
-| [CHANGELOG.md](CHANGELOG.md) | Concise upgrade and change-control record |
-| [SPEC.md](SPEC.md) | Canonical v0.5 technical specification |
-| [USAGE_ATTRIBUTION.md](USAGE_ATTRIBUTION.md) | Usage-event schema and product-cost attribution |
-| [RESERVATION_SETTLEMENT.md](RESERVATION_SETTLEMENT.md) | Variable-cost execution, reservation, settlement, and reconciliation |
-| [SPONSORED_DELEGATION.md](SPONSORED_DELEGATION.md) | Sponsor, donor, employer, and third-party funding profile |
-| [FLOWS.md](FLOWS.md) | v0.5 Mermaid architecture and sequence diagrams |
-| [ROADMAP.md](ROADMAP.md) | Version history and future milestones |
-| [DISCOVERY.md](DISCOVERY.md) | Provider capability metadata |
-| [IMPLEMENTATION_PROFILES.md](IMPLEMENTATION_PROFILES.md) | Staged implementation profiles |
-| [THREAT_MODEL.md](THREAT_MODEL.md) | Security, economic, attribution, and settlement threat model |
-| [RATIONALE.md](RATIONALE.md) | Economic and adoption rationale |
-| [EXAMPLES.md](EXAMPLES.md) | Integration examples and schema test vectors |
-| [DISCUSSIONS/decisions.md](DISCUSSIONS/decisions.md) | Design decisions |
-| [DISCUSSIONS/open-questions.md](DISCUSSIONS/open-questions.md) | Unresolved questions |
-| [AI_CONTRIBUTIONS/README.md](AI_CONTRIBUTIONS/README.md) | Multi-model review record and current reading guidance |
-| [schemas/](schemas/) | JSON Schemas for usage and ledger events |
-| [examples/](examples/) | Worked usage and settlement examples |
+| [CHANGELOG.md](CHANGELOG.md) | Upgrade and change-control record |
+| [SPEC.md](SPEC.md) | Canonical v0.6 technical specification |
+| [USAGE_ATTRIBUTION.md](USAGE_ATTRIBUTION.md) | Attribution architecture and privacy |
+| [USAGE_EVENT_SCHEMA.md](USAGE_EVENT_SCHEMA.md) | v0.6 ordering, provenance, and event fields |
+| [RESERVATION_SETTLEMENT.md](RESERVATION_SETTLEMENT.md) | Reservation and settlement |
+| [CONSENT_RECEIPT.md](CONSENT_RECEIPT.md) | Approved economic and privacy terms |
+| [EVIDENCE_RECONCILIATION.md](EVIDENCE_RECONCILIATION.md) | Evidence classes and reconciliation |
+| [SPONSORED_DELEGATION.md](SPONSORED_DELEGATION.md) | Third-party funding profile |
+| [FLOWS.md](FLOWS.md) | Mermaid diagrams |
+| [DISCOVERY.md](DISCOVERY.md) | Provider metadata |
+| [IMPLEMENTATION_PROFILES.md](IMPLEMENTATION_PROFILES.md) | Adoption profiles |
+| [THREAT_MODEL.md](THREAT_MODEL.md) | Security and economic threats |
+| [EXAMPLES.md](EXAMPLES.md) | Examples and test vectors |
+| [schemas/](schemas/) | v0.5 and v0.6 JSON Schemas |
+| [examples/](examples/) | Positive worked examples |
+| [tests/invalid/](tests/invalid/) | Negative semantic fixtures |
 
-The v0.5 [executive / technical PDF](docs/ABDS_executive_technical_brief_fixed.pdf) and [PowerPoint deck](docs/ABDS_executive_technical_brief.pptx) summarize the current architecture.
+The PowerPoint and PDF summarize the architecture but do not override `SPEC.md`.
 
 ## Review Priorities
 
-1. Is the two-plane separation between usage facts and economic ledger mutations correct?
-2. Which usage-event fields belong in a minimum interoperable core?
-3. Should reservation be mandatory for all streaming and agentic operations or only above risk thresholds?
-4. How should Provider routers disclose failed, speculative, and fallback attempts?
-5. What Sponsor reporting remains useful without becoming surveillance?
-6. Which profile should require signed usage or settlement receipts?
-7. What would make a Provider reject the proposal on economic, abuse, accounting, or privacy grounds?
+1. Is the provider-signed, provider-reported, gateway-attested hierarchy correct?
+2. Which production signature and canonicalization profile should ABDS select?
+3. Which Consent Receipt fields form the minimum interoperable core?
+4. How should invoice-level aggregate reconciliation map back to physical attempts?
+5. Should signed evidence be Standard or Advanced?
+6. Which workload bindings can Providers enforce without trusting Client labels?
+7. What would make a Provider reject the proposal on abuse, accounting, privacy, or implementation grounds?
 
 ## Author
 
@@ -278,4 +280,4 @@ Proposed by **Marc Johnston** ([@MJohnstonAI](https://github.com/MJohnstonAI)), 
 
 ## License
 
-MIT - this proposal is open for review, implementation, challenge, and extension.
+MIT — open for review, implementation, challenge, and extension.
