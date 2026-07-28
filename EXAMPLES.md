@@ -13,12 +13,14 @@ All domains, identifiers, models, units, amounts, Sponsors, and funding offers a
 
 | File | Purpose |
 |---|---|
-| `examples/gateway-attested-usage-event.json` | Provisional gateway observation |
-| `examples/provider-signed-usage-event.json` | Provider-signed final evidence |
+| `examples/gateway-attested-usage-event.json` | Transitional provisional gateway observation later reconciled against an external Provider record |
+| `examples/provider-signed-usage-event.json` | Independent provider-native physical attempt with final signed evidence |
 | `examples/sponsor-consent-receipt.json` | Sponsor-funded Consent Receipt |
-| `examples/late-usage-reconciliation.json` | Append-only reconciliation and adjustment arithmetic |
+| `examples/late-usage-reconciliation.json` | Append-only reconciliation of the gateway event and adjustment arithmetic |
 
-The provider-signature fixture uses `JWS-HS256-test-only` solely to make verification reproducible with Python's standard library. Production ABDS signatures should use asymmetric keys and a selected canonicalization profile.
+The gateway and provider-signed Usage Event files illustrate different evidence paths; they are not duplicate events for the same physical attempt. Later Provider evidence for the gateway example is represented by its Reconciliation Event rather than by a second Usage Event.
+
+The provider-signature fixture uses `HMAC-SHA256-test-only` solely to make verification reproducible with Python's standard library. Production ABDS signatures should use asymmetric keys and a selected canonicalization profile.
 
 ## v0.6 Negative Fixtures
 
