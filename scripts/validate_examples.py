@@ -113,7 +113,9 @@ def validate_v05_cross_event_invariants(
         settled_quantity = float(finalizer["quantity"])
         released_quantity = float(finalizer.get("released_quantity", 0))
         if not math.isclose(settled_quantity + released_quantity, reserved_quantity):
-            raise AssertionError("v0.5 settlement must account for the full reservation.")
+            raise AssertionError(
+                "v0.5 settlement must account for the full reservation."
+            )
         if not math.isclose(
             settled_quantity, float(usage_event["billing"]["settled_quantity"])
         ):
@@ -136,7 +138,8 @@ def verify_provider_signature(event: dict[str, Any]) -> None:
     evidence = event["evidence"]
     if evidence["class"] != "provider_signed":
         return
-    if evidence["signature_format"] != "JWS-HS256-test-only":
+    if evidence["signature_format"] != "HMAC-SHA256-test-only":
+        # Production profiles are verified by implementation-specific trust configuration.
         return
 
     payload = canonical_provider_payload(event)
@@ -162,9 +165,13 @@ def verify_consent_digest(receipt: dict[str, Any]) -> None:
         raise AssertionError("Consent Receipt digest does not match.")
 
 
-def validate_consent_binding(receipt: dict[str, Any], usage_event: dict[str, Any]) -> None:
+def validate_consent_binding(
+    receipt: dict[str, Any], usage_event: dict[str, Any]
+) -> None:
     for field in ("delegation_id", "client_id", "beneficiary_ref", "consent_receipt_id"):
-        receipt_field = "consent_receipt_id" if field == "consent_receipt_id" else field
+        receipt_field = (
+            "consent_receipt_id" if field == "consent_receipt_id" else field
+        )
         if receipt[receipt_field] != usage_event[field]:
             raise AssertionError(f"Consent Receipt is not bound to usage field {field}.")
     if receipt["funding_source_type"] != usage_event["billing"]["funding_source_type"]:
@@ -200,6 +207,8 @@ def validate_ordering(events: list[dict[str, Any]]) -> None:
         sequence_numbers = [event["sequence_number"] for event in ordered]
         if len(sequence_numbers) != len(set(sequence_numbers)):
             raise AssertionError(f"Duplicate sequence number within scope {key}.")
+        if sequence_numbers != sorted(sequence_numbers):
+            raise AssertionError(f"Non-monotonic sequence numbers within scope {key}.")
         for previous, current in zip(ordered, ordered[1:]):
             if current.get("previous_event_id") != previous["usage_event_id"]:
                 raise AssertionError(
@@ -208,7 +217,8 @@ def validate_ordering(events: list[dict[str, Any]]) -> None:
 
 
 def validate_reconciliation(
-    reconciliation: dict[str, Any], source_event: dict[str, Any] | None = None
+    reconciliation: dict[str, Any],
+    source_event: dict[str, Any] | None = None,
 ) -> None:
     expected = (
         float(reconciliation["provider_final_quantity"])
@@ -229,7 +239,10 @@ def validate_reconciliation(
                 raise AssertionError(f"Reconciliation does not match source {field}.")
         if reconciliation["source_usage_event_id"] != source_event["usage_event_id"]:
             raise AssertionError("Reconciliation does not reference the source Usage Event.")
-        if reconciliation["funding_bucket_ref"] != source_event["billing"]["funding_bucket_ref"]:
+        if (
+            reconciliation["funding_bucket_ref"]
+            != source_event["billing"]["funding_bucket_ref"]
+        ):
             raise AssertionError("Reconciliation changed the funding bucket.")
         if reconciliation["unit_type"] != source_event["billing"]["unit_type"]:
             raise AssertionError("Reconciliation changed the unit type.")
@@ -251,6 +264,7 @@ def assert_rejected(label: str, function: Callable[[], None]) -> None:
 
 
 def main() -> int:
+    # Preserve v0.5 validation.
     v05_usage_schema = load_json(V05_USAGE_SCHEMA)
     v05_ledger_schema = load_json(V05_LEDGER_SCHEMA)
     v05_usage = load_json(V05_USAGE_EXAMPLE)
@@ -262,6 +276,7 @@ def main() -> int:
         validate_schema(event, v05_ledger_schema, f"{V05_LEDGER_EXAMPLE.name}[{index}]")
     validate_v05_cross_event_invariants(v05_usage, v05_ledger)
 
+    # Validate v0.6 positive examples.
     usage_schema = load_json(V06_USAGE_SCHEMA)
     consent_schema = load_json(V06_CONSENT_SCHEMA)
     recon_schema = load_json(V06_RECON_SCHEMA)
@@ -279,9 +294,11 @@ def main() -> int:
     verify_consent_digest(consent)
     validate_consent_binding(consent, gateway_event)
     validate_consent_binding(consent, provider_event)
-    validate_ordering([gateway_event, provider_event])
+    validate_ordering([gateway_event])
+    validate_ordering([provider_event])
     validate_reconciliation(reconciliation, gateway_event)
 
+    # Negative fixtures must fail semantic validation.
     assert_rejected(
         "replayed-event.json",
         lambda: validate_ordering(load_json(INVALID / "replayed-event.json")),
@@ -305,7 +322,9 @@ def main() -> int:
     )
     assert_rejected(
         "signature-mismatch.json",
-        lambda: verify_provider_signature(load_json(INVALID / "signature-mismatch.json")),
+        lambda: verify_provider_signature(
+            load_json(INVALID / "signature-mismatch.json")
+        ),
     )
     assert_rejected(
         "late-usage-double-charge.json",
