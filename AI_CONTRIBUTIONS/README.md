@@ -4,106 +4,61 @@ This folder records technical critique and design input from AI systems includin
 
 ## Canonical Specification Context
 
-Historical contributions remain useful research evidence, but they reviewed earlier ABDS drafts. The canonical v0.5 reading set is:
+Historical contributions remain useful research evidence, but they reviewed earlier ABDS drafts. The canonical v0.6 reading set is:
 
 1. `README.md`
 2. `CHANGELOG.md`
 3. `SPEC.md`
 4. `USAGE_ATTRIBUTION.md`
-5. `RESERVATION_SETTLEMENT.md`
-6. `FLOWS.md`
-7. `THREAT_MODEL.md`
+5. `USAGE_EVENT_SCHEMA.md`
+6. `RESERVATION_SETTLEMENT.md`
+7. `CONSENT_RECEIPT.md`
+8. `EVIDENCE_RECONCILIATION.md`
+9. `FLOWS.md`
+10. `THREAT_MODEL.md`
 
-The current v0.5 draft:
+The current draft:
 
 - separates Resource User, Beneficiary, Funding Principal, Economic Authorizer, Client, and Provider;
 - supports user, organization, Sponsor, Provider-promotion, and developer funding;
-- uses OAuth Rich Authorization Requests for economic policy;
-- keeps mutable economic state out of tokens;
+- keeps mutable economic state out of Execution Tokens;
 - prohibits silent payer substitution;
 - separates Sponsor funding from data access;
-- defines one immutable Usage Event per physical model attempt;
+- records one Usage Event per physical attempt;
 - separates Usage Events from economic Ledger Events;
-- attributes retries, fallbacks, routes, workflows, and agent steps;
-- defines reservation, settlement, release, expiry, reconciliation, and adjustment semantics;
-- provides JSON Schemas and worked examples.
+- distinguishes gateway-attested, Provider-reported, and Provider-signed evidence;
+- issues immutable Consent Receipts;
+- reconciles late Provider usage through append-only events and compensating adjustments.
 
-AI reviewers MUST NOT treat earlier examples containing mutable quota token claims as current ABDS guidance.
-
-## Why This Exists
-
-ABDS affects AI Providers, application developers, users, organizations, and Sponsors. Multi-model review helps expose security, OAuth, accounting, privacy, implementation, and economic blind spots that one model or author may miss.
+Historical reviews do not override the canonical documents.
 
 ## Contribution Workflow
 
-1. Read the canonical v0.5 documents.
-2. State the model name, version, date, and review scope.
-3. Separate confirmed defects, design trade-offs, and speculative ideas.
-4. Cite the affected repository sections.
-5. Avoid claiming Provider endorsement or standards-body status.
-6. Submit the contribution through a human-reviewed commit or pull request.
+1. Read the canonical specification set.
+2. Identify the model, version, date, and human contributor.
+3. Separate generated analysis from accepted human decisions.
+4. Cite primary technical sources where external claims are made.
+5. Submit a focused issue or pull request.
+6. Include schema examples and negative tests for normative changes.
+7. Update the threat model for security-sensitive changes.
+8. Do not claim Provider support or standards approval without evidence.
 
-## Folder Structure
+## Suggested Review Areas
 
-```text
-AI_CONTRIBUTIONS/
-├── README.md
-├── Claude/
-├── GPT/
-├── Gemini/
-├── Llama/
-├── other/
-└── community/
-```
+- Provider evidence and signature profiles;
+- Consent Receipt interoperability;
+- reconciliation and invoice mapping;
+- OAuth security;
+- Provider economics;
+- Sponsor privacy;
+- abuse and workload laundering;
+- reference implementation architecture;
+- conformance tests.
 
-## File Naming Convention
+## File Naming
 
 ```text
 {model_name}_{date}_{topic}.md
 ```
 
-## Recorded Contributions
-
-### Claude Sonnet 4.6
-
-Key contributions included identifying the bootstrapping problem, proposing staged maturity profiles, recognizing the need for Provider capability discovery, and documenting the severity of the original mutable-quota token error.
-
-### GPT-5.5 Thinking
-
-Key contributions included the corrected four-object architecture, removal of mutable quota from tokens, Provider-side grant and ledger authority, enterprise funding considerations, and the estimate-reserve-execute-settle-release pattern.
-
-### Gemini
-
-Key contributions included formal OAuth terminology and mapping, high-throughput Provider architecture, MUST/SHOULD/MAY framing, threat analysis, backend-for-frontend guidance, and separation of token introspection from usage introspection.
-
-### GPT-5.6 Thinking - v0.5 Synthesis
-
-The v0.5 synthesis integrated community feedback about user/workspace and agent-step cost attribution. It added:
-
-- Provider Accounting and Client Observability planes;
-- one immutable Usage Event per physical model attempt;
-- separate Ledger Events for economic mutations;
-- requested versus resolved model attribution;
-- retry, fallback, routing, workflow, and agent-step correlation;
-- idempotent reservation and settlement;
-- append-only adjustment semantics;
-- synchronized specification, roadmap, discovery, profiles, threats, diagrams, schemas, examples, and presentation.
-
-This synthesis is incorporated into the canonical repository documents rather than treated as an alternative specification.
-
-## Suggested Review Prompts
-
-**Security:**
-> Read the canonical ABDS v0.5 documents and identify authorization, attribution, reservation, settlement, event-delivery, and privacy failures.
-
-**Provider feasibility:**
-> If implementing ABDS at an AI Provider or routing gateway, identify the three hardest engineering and economic problems and propose testable mitigations.
-
-**Accounting:**
-> Test whether the Usage Event and Ledger Event separation supports retries, fallbacks, partial completion, adjustments, disputes, and historical pricing without double settlement.
-
-**Privacy:**
-> Evaluate whether Sponsor reporting and Client observability fields can be useful without exposing prompts, outputs, identity, or small-cohort behavior.
-
-**Conformance:**
-> Derive positive and negative test vectors for the Basic, Standard, Advanced, and Sponsored Funding profiles.
+AI-assisted contributions remain the responsibility of the human submitting them.
