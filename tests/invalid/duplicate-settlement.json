@@ -1,0 +1,1 @@
+{"settlements":[{"settlement_id":"set_dup_1","idempotency_key":"idem_dup","delegation_id":"del_abc123","funding_bucket_ref":"bucket_pairwise_7f2"},{"settlement_id":"set_dup_1","idempotency_key":"idem_other","delegation_id":"del_abc123","funding_bucket_ref":"bucket_pairwise_7f2"}]}
