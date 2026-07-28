@@ -1,71 +1,51 @@
 # Open Design Questions
 
-This document tracks unresolved questions in ABDS v0.5. Questions already resolved by the current specification are removed or reframed.
+This document tracks unresolved questions in ABDS v0.6. Accepted decisions belong in `DISCUSSIONS/decisions.md`.
 
-## Q1: Refresh and Durable Grant Credentials
+## Q1: Production Signature Profile
 
-Should Providers issue refresh tokens, use OAuth Token Exchange from a durable grant credential, or require periodic reauthorization? How should token refresh interact with grant expiry, consent changes, and entitlement lapse?
+Which asymmetric signature format, canonicalization method, algorithm set, and key-discovery mechanism should ABDS require for Provider-signed evidence and Consent Receipts?
 
-## Q2: Multi-Model Bundles and Dynamic Aliases
+## Q2: Standard Versus Advanced Evidence
 
-How should `model_scope` represent changing bundles, aliases, model revisions, and Provider routers without granting unexpectedly broader access?
+Should Provider-signed evidence be required for the Standard profile, or should Standard permit authenticated Provider-reported evidence while Advanced requires signatures?
 
-## Q3: Minimum Interoperable Usage Event
+## Q3: Batch Evidence
 
-Which v0.5 Usage Event fields are mandatory across Providers, and which remain Provider-defined extensions?
+How should signed batch manifests, Merkle roots, and event inclusion proofs be represented and verified?
 
-## Q4: Billability of Failed and Speculative Attempts
+## Q4: Invoice-Level Reconciliation
 
-Which failed-before-inference, failed-after-partial-inference, superseded, speculative, safety, and fallback attempts may be billed, and how must that policy be disclosed?
+How should a Provider invoice or aggregate billing export be allocated back to logical requests and physical attempts without inventing unsupported precision?
 
-## Q5: Reservation Thresholds
+## Q5: Reconciliation Window
 
-Should reservation be mandatory for every streaming request, only above a cost/risk threshold, or only for specific modalities and agentic workloads?
+What normal evidence-arrival window should apply to interactive, streaming, batch, routed, and agentic workloads?
 
-## Q6: Reconciliation Time Bounds
+## Q6: Billability of Failed and Speculative Attempts
 
-How long may a settlement remain pending after Provider failure, delayed batch completion, or cross-region uncertainty? What user-facing status is required?
+Which failed-before-inference, failed-after-partial-inference, superseded, speculative, safety, retry, and fallback attempts may be charged, and how must that policy be disclosed?
 
-## Q7: Signed Usage and Settlement Receipts
+## Q7: Minimum Consent Receipt
 
-Should signed receipts be part of Standard or Advanced? Which key-discovery, rotation, replay, and retention profile should be used?
+Which receipt fields are mandatory across all Providers, and which remain profile-specific extensions?
 
-## Q8: Client Attribution Echo Policy
+## Q8: Workload Enforcement
 
-Which workspace, feature, workflow, agent, experiment, trace, or span references should a Provider echo? Should pairwise pseudonymization be required?
+Which workload scopes can a Provider enforce from registered policy rather than trusting Client-supplied labels?
 
-## Q9: Sponsor Reporting and Privacy Thresholds
+## Q9: Token Refresh and Durable Grants
 
-What minimum cohort sizes, noise, suppression, or aggregation rules prevent Sponsor reports from becoming user surveillance?
+Should Providers use refresh tokens, Token Exchange from a durable grant credential, or periodic reauthorization? How does refresh interact with receipt expiry and policy changes?
 
-## Q10: Eligibility Attestation
+## Q10: Signing-Key Compromise
 
-Should Sponsor eligibility be verified by the Provider, Sponsor, Client, or a privacy-preserving external credential? How is fraud controlled without centralizing sensitive data?
+How should verifiers treat previously accepted evidence after a Provider signing key is compromised or revoked?
 
-## Q11: Multiple Authorized Funding Sources
+## Q11: Privacy-Preserving Sponsor Reporting
 
-Should one logical request ever split across funding buckets, or should each settlement always resolve to one source? v0.5 currently favors one funding bucket per settlement.
+Should ABDS define cohort thresholds, differential privacy guidance, or only a general aggregate-reporting principle?
 
-## Q12: Competitive Neutrality
+## Q12: Formal Identifier Registration
 
-Should ABDS include non-discrimination guidance so delegated calls are not intentionally degraded relative to direct API calls, or is this outside a technical standard?
-
-## Q13: Authorization Details Identifier
-
-What collision-resistant identifier and registration path should replace the `abds_ai_delegation` placeholder?
-
-## Q14: Cross-Provider Routing
-
-How should a Client or broker route among separately authorized Provider grants without implying cross-provider transferability of units?
-
-## Q15: OpenTelemetry Mapping
-
-When emerging Generative AI semantic conventions stabilize, should ABDS register a formal mapping for request, attempt, route, model, tokens, latency, and outcome?
-
-## Q16: Accounting Retention and Privacy Erasure
-
-How should Providers reconcile immutable economic records with privacy-law erasure, minimization, and retention requirements?
-
-## Q17: Provider Economics
-
-What pricing, fraud, support, cannibalization, and subscription-allocation constraints would make Providers accept or reject ABDS?
+What collision-resistant identifiers and registration paths should ABDS use for authorization details, schema media types, and well-known metadata?
