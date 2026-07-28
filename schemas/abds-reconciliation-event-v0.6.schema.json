@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:abds:schema:reconciliation-event:0.6",
+  "title": "ABDS Usage Reconciliation Event v0.6",
+  "description": "Append-only comparison of a prior settled or provisional quantity with later Provider evidence.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "reconciliation_event_id",
+    "occurred_at",
+    "delegation_id",
+    "client_id",
+    "request_id",
+    "source_usage_event_id",
+    "provider_request_id",
+    "status",
+    "original_quantity",
+    "provider_final_quantity",
+    "adjustment_quantity",
+    "unit_type",
+    "funding_bucket_ref",
+    "action"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.6"},
+    "reconciliation_event_id": {"type": "string", "minLength": 8, "maxLength": 200},
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "delegation_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "client_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "request_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "source_usage_event_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "provider_request_id": {"type": "string", "minLength": 1, "maxLength": 200},
+    "provider_billing_record_ref": {"type": "string", "maxLength": 300},
+    "status": {
+      "type": "string",
+      "enum": ["matched", "variance_detected", "adjusted", "disputed", "final"]
+    },
+    "original_quantity": {"type": "number", "minimum": 0},
+    "provider_final_quantity": {"type": "number", "minimum": 0},
+    "adjustment_quantity": {"type": "number"},
+    "unit_type": {"type": "string", "minLength": 1, "maxLength": 200},
+    "funding_bucket_ref": {"type": "string", "minLength": 1, "maxLength": 200},
+    "late_usage": {"type": "boolean"},
+    "action": {
+      "type": "string",
+      "enum": ["no_change", "adjustment_required", "dispute_opened"]
+    },
+    "adjustment_ledger_event_id": {"type": "string", "maxLength": 200},
+    "idempotency_key": {"type": "string", "maxLength": 255}
+  }
+}
