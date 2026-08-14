@@ -4,6 +4,7 @@
 
 ![Status: Draft Proposal](https://img.shields.io/badge/status-draft%20proposal-yellow)
 ![Spec: v0.7](https://img.shields.io/badge/spec-v0.7-blue)
+![Legal Framework: v0.7.1](https://img.shields.io/badge/legal%20framework-v0.7.1-orange)
 ![Licensing: Source Available](https://img.shields.io/badge/licensing-source--available-orange)
 ![Provider Adoption: None Claimed](https://img.shields.io/badge/provider%20adoption-none%20claimed-lightgrey)
 
@@ -23,7 +24,7 @@ ABDS is not a payment rail, a BYOK wrapper, a claim that a consumer subscription
 
 ## What Changed in v0.7
 
-ABDS v0.7 is a deliberately small, compatibility-preserving release focused on **Provider Adoption & Entitlement Binding**.
+ABDS v0.7 is a deliberately small, compatibility-preserving technical release focused on **Provider Adoption & Entitlement Binding**.
 
 It adds five clarifications that matter for real Provider implementation:
 
@@ -35,6 +36,19 @@ It adds five clarifications that matter for real Provider implementation:
 
 The v0.6 accounting, evidence, consent, reservation, settlement, reconciliation, privacy, and replay-control architecture remains intact.
 
+## v0.7.1 Legal & Provenance Hardening
+
+v0.7.1 does **not** change the technical protocol. It tightens the repository's rights-management position before broader Provider outreach:
+
+- new executable ABDS material uses **PolyForm Noncommercial 1.0.0** rather than the earlier Small-Business permission;
+- commercial organizations receive a separate, limited **Provider Evaluation Licence** for internal review and non-production proof-of-concept work;
+- commercial production, hosted service, white-label, brokering, resale, and provider-integration rights are not automatically granted;
+- substantive contributors must grant NeuroSync sufficient sublicensing and relicensing rights for accepted contributions;
+- provenance is strengthened with `AUTHORS.md`, `CITATION.cff`, contributor terms, and explicit historical licensing records; and
+- project-name, false-origin, domain, certification, and endorsement controls are strengthened.
+
+Earlier rights already validly granted under historical licensing are not purportedly revoked.
+
 ## Canonical Reading Order
 
 Human reviewers and AI systems should read:
@@ -42,7 +56,7 @@ Human reviewers and AI systems should read:
 1. [README.md](README.md) — purpose and current architecture
 2. [CHANGELOG.md](CHANGELOG.md) — version-to-version change control
 3. [SPEC.md](SPEC.md) — v0.6 base specification
-4. [SPEC_V0.7.md](SPEC_V0.7.md) — **current normative v0.7 addendum**
+4. [SPEC_V0.7.md](SPEC_V0.7.md) — **current normative v0.7 technical addendum**
 5. [DISCOVERY.md](DISCOVERY.md) — Provider capability and entitlement metadata
 6. [IMPLEMENTATION_PROFILES.md](IMPLEMENTATION_PROFILES.md) — staged adoption profiles
 7. [FLOWS.md](FLOWS.md) — architecture and sequence diagrams
@@ -52,10 +66,13 @@ Human reviewers and AI systems should read:
 11. [CONSENT_RECEIPT.md](CONSENT_RECEIPT.md) — immutable approved terms
 12. [EVIDENCE_RECONCILIATION.md](EVIDENCE_RECONCILIATION.md) — evidence hierarchy and late usage
 13. [THREAT_MODEL.md](THREAT_MODEL.md) — OAuth, economic, evidence, and privacy risks
-14. [LICENSE.md](LICENSE.md) — v0.7 licensing framework and historical notice
+14. [LICENSE.md](LICENSE.md) — current v0.7.1 licensing framework and historical notice
 15. [COMMERCIAL_USE.md](COMMERCIAL_USE.md) — commercial licensing and partnership path
-16. [NOTICE.md](NOTICE.md) — provenance and stewardship
-17. [TRADEMARKS.md](TRADEMARKS.md) — project-name and endorsement policy
+16. [PROVIDER_EVALUATION_LICENSE.md](PROVIDER_EVALUATION_LICENSE.md) — limited commercial-company evaluation permission
+17. [CONTRIBUTOR_LICENSE_AGREEMENT.md](CONTRIBUTOR_LICENSE_AGREEMENT.md) — contributor rights grant
+18. [NOTICE.md](NOTICE.md) — authorship, provenance, and chain-of-title notice
+19. [AUTHORS.md](AUTHORS.md) — originator and stewardship record
+20. [TRADEMARKS.md](TRADEMARKS.md) — project-name, false-origin, and endorsement policy
 
 Historical reviews and earlier commits are research context, not current normative guidance.
 
@@ -318,7 +335,10 @@ ABDS is not:
 - [x] v0.7 entitlement-type taxonomy and discovery metadata
 - [x] v0.7 Provider Adoption Profile
 - [x] v0.7 adoption-status taxonomy
-- [x] v0.7 licensing, commercial-use, provenance, and project-name framework
+- [x] v0.7 initial licensing and stewardship framework
+- [x] v0.7.1 provider-evaluation licence
+- [x] v0.7.1 noncommercial software licensing hardening
+- [x] v0.7.1 contributor relicensing and provenance hardening
 - [ ] Provider-native implementation
 - [ ] ABDS Studio reference simulator
 - [ ] Independent Provider and OAuth review
@@ -326,17 +346,18 @@ ABDS is not:
 
 ## Licensing
 
-ABDS v0.7 introduces a clearer prospective licensing framework:
+The current **v0.7.1 legal framework** is prospective:
 
 - **Specification and documentation:** CC BY-NC-SA 4.0 unless a file states otherwise.
-- **Software and executable implementation materials:** PolyForm Small Business License 1.0.0 unless a file states otherwise.
-- **Commercial use outside the applicable public licence:** separate written agreement with NeuroSync AI Dynamics (Pty) Ltd.
-- **Historical versions:** the new framework does not purport to revoke rights already validly granted for earlier material that was publicly described as MIT licensed.
+- **New software and executable implementation materials:** PolyForm Noncommercial License 1.0.0 unless a file states otherwise.
+- **Commercial-company internal evaluation:** limited additional rights under `PROVIDER_EVALUATION_LICENSE.md`.
+- **Commercial production use outside the applicable public licence:** separate written agreement with NeuroSync AI Dynamics and/or the applicable rights holder.
+- **Historical versions:** rights already validly granted under earlier licensing—including materials described as MIT through v0.6 and initial v0.7 software permissions under PolyForm Small Business—are not purportedly revoked.
 - **Project names and future certification marks:** governed separately; implementation does not imply certification or endorsement.
 
-This makes the repository **source available**, not OSI-open-source as a whole.
+The repository is **source available**, not OSI-open-source as a whole.
 
-See [LICENSE.md](LICENSE.md), [COMMERCIAL_USE.md](COMMERCIAL_USE.md), [NOTICE.md](NOTICE.md), and [TRADEMARKS.md](TRADEMARKS.md).
+See [LICENSE.md](LICENSE.md), [COMMERCIAL_USE.md](COMMERCIAL_USE.md), [PROVIDER_EVALUATION_LICENSE.md](PROVIDER_EVALUATION_LICENSE.md), [CONTRIBUTOR_LICENSE_AGREEMENT.md](CONTRIBUTOR_LICENSE_AGREEMENT.md), [NOTICE.md](NOTICE.md), [AUTHORS.md](AUTHORS.md), and [TRADEMARKS.md](TRADEMARKS.md).
 
 ## Review Priorities
 
