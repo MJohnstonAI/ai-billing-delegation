@@ -2,7 +2,7 @@
 
 > Concise record of material changes between draft versions of the Artificial Intelligence Billing Delegation Standard.
 
-`SPEC.md` remains the canonical technical draft. This file records the version-to-version upgrade.
+`SPEC.md` remains the v0.6 base specification. `SPEC_V0.7.md` is the normative v0.7 addendum. This file records version-to-version upgrades.
 
 ## Version Summary
 
@@ -14,10 +14,136 @@
 | v0.4 | Payer-neutral funding | Added Funding Principal, Economic Authorizer, Beneficiary, Sponsor funding, privacy, and no silent payer substitution |
 | v0.5 | Usage attribution and settlement | Added one event per physical attempt, separate Ledger Events, reservation, settlement, schemas, and examples |
 | v0.6 | Evidence, consent, and reconciliation | Added scoped ordering, evidence provenance, Consent Receipts, late-usage reconciliation, replay controls, and negative tests |
+| v0.7 | Provider adoption and entitlement binding | Separated app login from economic authorization, added Provider-authoritative entitlement resolution, entitlement types, adoption profile, maturity labels, and a prospective licensing framework |
 
-## v0.6 — Evidence, Consent, and Reconciliation
+## v0.7 — Provider Adoption & Entitlement Binding
 
 **Status:** Current draft.
+
+### Problem addressed
+
+v0.6 defined the Provider-side grant, consent, evidence, execution accounting, reservation, settlement, reconciliation, and payer-neutral funding model. It still left one commercially important boundary too implicit:
+
+- application authentication could be confused with economic authorization;
+- `user_entitlement` described who funded usage but not the commercial/accounting form of the entitlement;
+- the specification did not explicitly define how a Provider determines which user-side or organization-side resources are eligible for delegation; and
+- early Provider evaluation still appeared to require too much of the full Standard/Advanced implementation surface.
+
+v0.7 addresses those gaps without changing the v0.6 accounting core.
+
+### Added document
+
+- `SPEC_V0.7.md` — normative v0.7 addendum
+
+### New licensing and stewardship documents
+
+- `LICENSE.md`
+- `COMMERCIAL_USE.md`
+- `NOTICE.md`
+- `TRADEMARKS.md`
+
+### Core technical changes
+
+1. Added explicit separation between:
+
+```text
+Application Authentication
+```
+
+and:
+
+```text
+ABDS Economic Authorization
+```
+
+A successful login to a third-party Client does not authorize AI resource consumption.
+
+2. Added Provider-authoritative **Entitlement Resolution**.
+
+The Provider determines which funding entitlements, if any, are eligible for the requesting Client, Beneficiary, workload, model scope, and risk context.
+
+3. Added an `entitlement_type` dimension independent from `funding_source_type`.
+
+Illustrative entitlement types:
+
+```text
+prepaid_credit
+pay_as_you_go
+subscription_allowance
+delegated_subscription_addon
+organization_pool
+sponsor_pool
+promotional_credit
+developer_balance
+other_provider_defined
+```
+
+4. Added new Provider discovery fields:
+
+```text
+abds_entitlement_types_supported
+abds_user_funded_delegation_supported
+abds_entitlement_selection_mode
+```
+
+5. Added a lightweight **Provider Adoption Profile** for feasibility testing.
+
+The profile requires the core authorization, entitlement, grant, metering, usage-status, revocation, and no-silent-payer-substitution properties without forcing an experimental Provider implementation to build the entire Advanced evidence and settlement stack first.
+
+6. Added an informative adoption-status taxonomy:
+
+```text
+conceptual
+simulated
+gateway_compatible
+provider_evaluated
+provider_pilot
+provider_native
+```
+
+A project cannot self-assign Provider-specific evaluation, pilot, or native status without Provider evidence.
+
+7. Added the invariant:
+
+> A Client MUST NOT manufacture, substitute, upgrade, or silently select a Provider entitlement. Entitlement eligibility and selection remain Provider-authoritative.
+
+### Licensing change
+
+v0.7 introduces a prospective repository licensing framework:
+
+- specification/documentation: CC BY-NC-SA 4.0 unless a file states otherwise;
+- software/executable implementation materials: PolyForm Small Business License 1.0.0 unless a file states otherwise;
+- broader commercial use: separate written agreement with NeuroSync AI Dynamics (Pty) Ltd;
+- historical versions: the new framework does not purport to revoke rights already validly granted for material previously described as MIT licensed;
+- project names and future certification marks: governed separately by `TRADEMARKS.md`.
+
+The repository should therefore be described as **source available**, not OSI-open-source as a whole.
+
+### Compatibility
+
+- v0.7 preserves the v0.4 payer-neutral funding model.
+- v0.7 preserves the v0.5 Usage Event and Ledger Event separation.
+- v0.7 preserves v0.6 Consent Receipts, evidence provenance, scoped ordering, reconciliation, replay controls, and append-only correction.
+- Existing v0.5 and v0.6 schema identifiers are unchanged.
+- A Provider may support v0.6 and v0.7 simultaneously.
+- v0.7 support must be advertised explicitly through discovery.
+- v0.7 does not imply that an existing consumer AI subscription is delegable.
+- No Provider adoption or endorsement is claimed.
+
+### Migration guidance
+
+Implementers moving from v0.6 should:
+
+1. keep application login and ABDS economic authorization as separate security decisions;
+2. add an explicit Entitlement Resolution step before creating or materially changing a grant;
+3. distinguish funding-source relationship from entitlement type;
+4. make the Provider authoritative for entitlement eligibility and selection;
+5. prevent silent entitlement or payer substitution;
+6. advertise v0.7 entitlement capabilities through Provider discovery;
+7. use the Provider Adoption Profile for early feasibility work where a full Standard/Advanced implementation is premature; and
+8. describe Provider relationship status accurately using the v0.7 maturity taxonomy.
+
+## v0.6 — Evidence, Consent, and Reconciliation
 
 ### Problem addressed
 
@@ -40,22 +166,6 @@ v0.5 defined who funded usage, which Client and physical attempts caused it, and
 - `schemas/abds-usage-event-v0.6.schema.json`
 - `schemas/abds-consent-receipt-v0.6.schema.json`
 - `schemas/abds-reconciliation-event-v0.6.schema.json`
-
-### Added positive examples
-
-- `examples/gateway-attested-usage-event.json`
-- `examples/provider-signed-usage-event.json`
-- `examples/sponsor-consent-receipt.json`
-- `examples/late-usage-reconciliation.json`
-
-### Added negative fixtures
-
-- duplicate Usage Event replay;
-- duplicate settlement identifier;
-- unbound Consent Receipt;
-- conflicting event ordering;
-- mismatched provider-signature fixture;
-- late-usage double-charge arithmetic.
 
 ### Core changes
 
@@ -96,22 +206,7 @@ sequence_number
 previous_event_id
 ```
 
-5. Added immutable Consent Receipts binding:
-
-```text
-grant
-Client
-Beneficiary
-payer
-spend ceiling
-model / operation / workload scope
-overage
-duration
-privacy
-revocation
-policy version
-integrity
-```
+5. Added immutable Consent Receipts binding grant, Client, Beneficiary, payer, spend ceiling, model/operation/workload scope, overage, duration, privacy, revocation, policy version, and integrity.
 
 6. Added append-only Reconciliation Events with the invariant:
 
@@ -128,25 +223,8 @@ adjustment_quantity = provider_final_quantity - original_quantity
 - v0.6 preserves the v0.4 payer-neutral funding model.
 - v0.6 preserves the v0.5 Usage Event and Ledger Event separation.
 - v0.5 schema files remain unchanged and available.
-- A Provider may support both v0.5 and v0.6.
-- v0.6 support must be advertised through discovery.
 - Gateway-attested evidence is transitional and must not be described as Provider-signed.
 - No v0.6 field expands the funding, model, operation, workload, or data access authorized by the grant.
-
-### Migration guidance
-
-Implementers moving from v0.5 should:
-
-1. preserve existing v0.5 event identifiers and immutable history;
-2. add scoped event sequence metadata;
-3. distinguish estimated, gateway-observed, Provider-reported, and Provider-final usage;
-4. classify the evidence source;
-5. issue a Consent Receipt for new or materially changed grants;
-6. retain unique token `jti` and replay state;
-7. append Reconciliation Events for late or corrected usage;
-8. post compensating Ledger adjustments rather than rewriting settlements;
-9. preserve Client and Beneficiary attribution;
-10. advertise v0.6 capabilities in Provider metadata.
 
 ## v0.5 — Usage Attribution and Settlement
 
@@ -208,8 +286,10 @@ v0.5: Grant -> Token -> Provider Execution
 
 ## Change-Control Rules
 
-- `main` contains the current canonical draft.
-- Material accepted changes update this file and the `SPEC.md` changelog.
-- Historical drafts are preserved through Git history and release tags where available, not parallel canonical branches.
+- `main` contains the current accepted draft after release changes are merged.
+- `SPEC.md` is the v0.6 base; `SPEC_V0.7.md` adds the current v0.7 normative delta.
+- Material accepted changes update this file and the applicable current specification document.
+- Historical drafts are preserved through Git history and release tags where available, not silently rewritten.
 - Published schema identifiers are not silently repurposed.
+- Licensing changes are prospective unless a valid earlier licence expressly allows otherwise.
 - A draft version does not claim standards-body approval or Provider adoption.

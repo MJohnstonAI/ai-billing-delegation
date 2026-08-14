@@ -1,15 +1,17 @@
-# ABDS Provider Discovery v0.6
+# ABDS Provider Discovery v0.7
 
-> Draft metadata for discovering ABDS authorization, consent, event, evidence, reconciliation, and accounting capabilities.
+> Draft metadata for discovering ABDS authorization, entitlement, consent, event, evidence, reconciliation, and accounting capabilities.
 
 ## Design Principle
 
-Discovery describes Provider capability, not a particular user's entitlement, balance, pricing, eligibility, or Sponsor pool.
+Discovery describes Provider capability, not a particular user's entitlement, balance, pricing, eligibility, private plan, funding offer, or Sponsor pool.
 
 Providers SHOULD publish ABDS metadata as:
 
 1. extensions to OAuth Authorization Server Metadata; or
 2. a separately registered ABDS well-known document.
+
+v0.7 adds entitlement-capability discovery so that a Client can learn which classes of delegated funding a Provider supports without learning whether a particular user is eligible.
 
 ## Illustrative Metadata
 
@@ -21,8 +23,9 @@ Providers SHOULD publish ABDS metadata as:
   "revocation_endpoint": "https://auth.provider.example/oauth/revoke",
 
   "abds_supported": true,
-  "abds_versions_supported": ["0.5", "0.6"],
+  "abds_versions_supported": ["0.6", "0.7"],
   "abds_profiles_supported": [
+    "provider_adoption",
     "basic",
     "standard",
     "advanced",
@@ -50,6 +53,19 @@ Providers SHOULD publish ABDS metadata as:
     "provider_promotion",
     "developer_account"
   ],
+
+  "abds_entitlement_types_supported": [
+    "prepaid_credit",
+    "pay_as_you_go",
+    "subscription_allowance",
+    "delegated_subscription_addon",
+    "organization_pool",
+    "sponsor_pool",
+    "promotional_credit",
+    "developer_balance"
+  ],
+  "abds_user_funded_delegation_supported": true,
+  "abds_entitlement_selection_mode": "provider_controlled",
 
   "abds_usage_event_schema_versions_supported": ["0.5", "0.6"],
   "abds_ledger_event_schema_versions_supported": ["0.5"],
@@ -110,9 +126,42 @@ The final location and authorization-details identifier require a registration s
 | `abds_usage_status_endpoint` | Yes | Provider-authoritative grant usage |
 | `abds_supported_scopes` | Yes | Supported ABDS scopes |
 | `abds_authorization_details_types_supported` | Yes | Supported Rich Authorization Request type |
-| `abds_funding_source_types_supported` | Yes | Enforceable funding-source types |
+| `abds_funding_source_types_supported` | Yes | Enforceable funding-source relationships |
 
-## v0.6 Capability Metadata
+## v0.7 Entitlement Metadata
+
+| Field | Description |
+|---|---|
+| `abds_entitlement_types_supported` | Commercial/accounting forms the Provider may make eligible for delegation |
+| `abds_user_funded_delegation_supported` | Whether a user-side entitlement may fund third-party execution at all |
+| `abds_entitlement_selection_mode` | Whether the Provider selects the entitlement, allows selection from Provider offers, or uses policy-only selection |
+
+`abds_entitlement_selection_mode` SHOULD be one of:
+
+```text
+provider_controlled
+user_selectable_from_provider_offers
+provider_policy_only
+```
+
+A Provider MAY publish additional values if needed, but SHOULD use collision-resistant names or URIs where interoperability matters.
+
+### Important privacy rule
+
+These fields describe capability only. They MUST NOT reveal:
+
+- whether the current user has a qualifying subscription or credit balance;
+- the user's remaining balance;
+- account-specific pricing;
+- organization membership;
+- Sponsor eligibility;
+- private promotional offers;
+- internal risk tiers; or
+- whether a particular account will be approved.
+
+Those decisions belong to authenticated Entitlement Resolution during authorization.
+
+## v0.6 Capability Metadata Retained in v0.7
 
 | Field | Description |
 |---|---|
@@ -146,10 +195,13 @@ The final location and authorization-details identifier require a registration s
 - `abds_app_verification_required`
 - `abds_max_delegation_period`
 - `abds_max_delegated_resource_units`
+- `abds_entitlement_resolution_endpoint` if a Provider exposes a dedicated authenticated interface
 
 ## Identifier Guidance
 
-`delegation_id` is the public grant reference used in tokens, Consent Receipts, usage status, Usage Events, Reconciliation Events, Ledger Events, revocation, and connected-app records.
+`delegation_id` remains the public grant reference used in tokens, Consent Receipts, usage status, Usage Events, Reconciliation Events, Ledger Events, revocation, and connected-app records.
+
+An entitlement identifier or `funding_bucket_ref` MUST NOT be a bearer credential and SHOULD remain opaque outside the Provider accounting plane.
 
 Recommended endpoint shapes:
 
@@ -165,6 +217,7 @@ GET /v1/abds/delegations/{delegation_id}/reconciliation
 Discovery metadata MUST NOT reveal:
 
 - user plan or balance;
+- user-specific entitlement eligibility;
 - private model access;
 - Provider risk thresholds;
 - internal grant identifiers;
@@ -174,7 +227,7 @@ Discovery metadata MUST NOT reveal:
 - contract-confidential pricing;
 - signing private keys.
 
-Public discovery describes capability. Authenticated endpoints determine entitlement and authorization.
+Public discovery describes capability. Authenticated Provider systems determine entitlement, eligibility, authorization, and effective funding selection.
 
 ## Open Questions
 
@@ -183,3 +236,5 @@ Public discovery describes capability. Authenticated endpoints determine entitle
 3. Should Providers advertise failed-attempt billability rules?
 4. Should the reconciliation window vary by workload class?
 5. How should batch evidence and inclusion proofs be discovered?
+6. Are the v0.7 entitlement types sufficiently neutral across subscription, prepaid, organization, Sponsor, promotion, and pay-as-you-go business models?
+7. Should Provider Adoption Profile support be a separate discovery flag or remain an implementation-profile value?

@@ -1,8 +1,81 @@
-# ABDS v0.6 Flow and Architecture Diagrams
+# ABDS v0.7 Flow and Architecture Diagrams
 
-These diagrams summarize the current draft. `SPEC.md` controls where normative text and diagrams differ.
+These diagrams summarize the current draft. `SPEC.md` provides the v0.6 base requirements and `SPEC_V0.7.md` controls the v0.7 normative additions where these diagrams are only illustrative.
 
-## 1. Payer-Neutral Authorization Core
+## 1. Application Authentication Is Separate From Economic Authorization
+
+```mermaid
+flowchart LR
+    U[Resource User] --> I[Application Sign-In]
+    I --> C[Client Session]
+    C --> F[Connect AI Usage]
+    F --> PA[Provider Authorization]
+    PA --> ER[Entitlement Resolution]
+    ER --> EC[Economic Consent]
+    EC --> G[Delegated AI Grant]
+```
+
+Signing into the Client establishes identity/session context only. It does not authorize AI resource consumption.
+
+## 2. Provider Entitlement Resolution
+
+```mermaid
+flowchart TD
+    PA[Provider Account] --> E1[Prepaid Credit]
+    PA --> E2[Pay-as-you-go]
+    PA --> E3[Subscription Allowance]
+    PA --> E4[Delegated Subscription Add-on]
+    PA --> E5[Organization Pool]
+    PA --> E6[Promotion / Sponsor / Other]
+
+    E1 --> R[Provider Entitlement Resolution]
+    E2 --> R
+    E3 --> R
+    E4 --> R
+    E5 --> R
+    E6 --> R
+
+    R -->|Eligible| C[Bounded Economic Consent]
+    R -->|Not eligible| D[No delegation / alternative Provider offer]
+    C --> G[Delegated AI Grant]
+```
+
+The Client may request a funding class or Provider-published offer, but the Provider selects or validates the actual Eligible Funding Entitlement.
+
+## 3. Consumer-App Reference Flow
+
+```mermaid
+sequenceDiagram
+    participant U as Resource User
+    participant A as Third-party AI Client
+    participant AS as AI Provider Authorization Server
+    participant G as Grant Service
+    participant API as AI Provider API
+    participant L as Provider Ledger
+
+    U->>A: Sign into Client
+    A-->>U: Client session established
+    U->>A: Connect AI Usage
+    A->>AS: Authorization request
+    AS->>U: Authenticate / resolve Provider Account
+    AS->>AS: Resolve eligible funding entitlements
+    AS->>U: Show payer, entitlement category, cap, scope, duration, revocation
+    U->>AS: Approve or reduce request
+    AS->>AS: Issue immutable Consent Receipt
+    AS->>G: Create grant bound to approved entitlement
+    G-->>A: Authorization result
+    A->>AS: Exchange code using PKCE
+    AS-->>A: Short-lived token with delegation_id and client_id
+    A->>API: AI request
+    API->>L: Enforce grant and bound entitlement
+    L-->>API: Authorized within cap
+    API-->>A: AI result
+    U->>AS: Inspect usage or revoke later
+```
+
+The developer does not need the user's master API key.
+
+## 4. Payer-Neutral Authorization Core
 
 ```mermaid
 flowchart LR
@@ -11,22 +84,24 @@ flowchart LR
     S[Sponsor Budget]
     P[Provider Promotion]
     D[Developer Account]
+    R[Entitlement Resolution]
     C[Consent Receipt]
     G[Delegated AI Grant]
     T[Short-lived Execution Token]
     X[Provider Execution]
 
-    U --> C
-    O --> C
-    S --> C
-    P --> C
-    D --> C
+    U --> R
+    O --> R
+    S --> R
+    P --> R
+    D --> R
+    R --> C
     C --> G
     G --> T
     T --> X
 ```
 
-## 2. Accounting and Evidence Planes
+## 5. Accounting and Evidence Planes
 
 ```mermaid
 flowchart TD
@@ -49,11 +124,11 @@ flowchart TD
     L --> L4[Compensating Adjustment]
 ```
 
-## 3. Attribution Hierarchy
+## 6. Attribution Hierarchy
 
 ```mermaid
 flowchart TD
-    FS[Funding Source] --> DG[Delegated AI Grant]
+    FS[Funding Source / Entitlement] --> DG[Delegated AI Grant]
     DG --> C[Registered Client]
     C --> B[Beneficiary]
     B --> R[Logical Request]
@@ -67,7 +142,7 @@ flowchart TD
 
 The delegated principal and registered Client remain separately attributable.
 
-## 4. Run-Level Reservation With Child Events
+## 7. Run-Level Reservation With Child Events
 
 ```mermaid
 flowchart TD
@@ -84,26 +159,27 @@ flowchart TD
     U3 --> ST
 ```
 
-## 5. Consent Receipt and Grant
+## 8. Consent Receipt and Grant
 
 ```mermaid
 sequenceDiagram
     participant A as Client
     participant AS as Provider Authorization Server
-    participant U as Resource User
+    participant U as Resource User / Economic Authorizer
     participant G as Grant Service
 
     A->>AS: Structured authorization request
-    AS->>U: Show payer, ceiling, scope, privacy, expiry, revocation
+    AS->>AS: Resolve eligible entitlement
+    AS->>U: Show payer, entitlement category, ceiling, scope, privacy, expiry, revocation
     U->>AS: Approve or reduce request
     AS->>AS: Issue immutable Consent Receipt
-    AS->>G: Create grant bound to receipt
+    AS->>G: Create grant bound to receipt and entitlement
     G-->>A: authorization code
     A->>AS: Exchange code using PKCE
     AS-->>A: Short-lived token with delegation_id and jti
 ```
 
-## 6. Gateway Evidence Reconciled With Provider Evidence
+## 9. Gateway Evidence Reconciled With Provider Evidence
 
 ```mermaid
 sequenceDiagram
@@ -129,7 +205,7 @@ sequenceDiagram
     end
 ```
 
-## 7. Provider-Signed Evidence
+## 10. Provider-Signed Evidence
 
 ```mermaid
 flowchart LR
@@ -143,7 +219,7 @@ flowchart LR
 
 Production signatures should use asymmetric keys. High-volume systems may verify inclusion in a signed batch.
 
-## 8. Event Ordering
+## 11. Event Ordering
 
 ```mermaid
 flowchart LR
@@ -154,7 +230,7 @@ flowchart LR
 
 Ordering is scoped to a reservation, run, request, or attempt. ABDS does not require one global sequence.
 
-## 9. Late Usage and Correction
+## 12. Late Usage and Correction
 
 ```mermaid
 flowchart TD
@@ -168,7 +244,7 @@ flowchart TD
 
 The original event and settlement remain immutable.
 
-## 10. Sponsor-Funded NatureGuard
+## 13. Sponsor-Funded NatureGuard
 
 ```mermaid
 sequenceDiagram
@@ -181,6 +257,7 @@ sequenceDiagram
     S->>AS: Create bounded funding program
     U->>A: Start sponsored feature
     A->>AS: Request grant with funding offer
+    AS->>AS: Resolve eligible Sponsor pool
     AS->>U: Show Sponsor, limits, workload, privacy, no payer fallback
     U->>AS: Approve
     AS-->>U: Consent Receipt
@@ -191,19 +268,32 @@ sequenceDiagram
     Note over U,S: Sponsor sees aggregate reporting only by default
 ```
 
-## 11. Funding Unavailable
+## 14. Funding or Entitlement Unavailable
 
 ```mermaid
 sequenceDiagram
     participant A as Client
     participant API as Provider API
-    participant L as Ledger
+    participant L as Ledger / Entitlement Service
     participant U as Resource User
 
     A->>API: AI request
-    API->>L: Validate authorized funding bucket
-    L-->>API: Exhausted, paused, expired, or revoked
+    API->>L: Validate authorized funding entitlement
+    L-->>API: Exhausted, paused, expired, ineligible, or revoked
     API-->>A: abds_funding_unavailable
-    A-->>U: Explain funded access is unavailable
-    Note over A,U: No silent charge to another payer
+    A-->>U: Explain delegated access is unavailable
+    Note over A,U: No silent charge to another payer or entitlement
 ```
+
+## 15. Provider Adoption Maturity
+
+```mermaid
+flowchart LR
+    C[conceptual] --> S[simulated]
+    S --> G[gateway_compatible]
+    G --> E[provider_evaluated]
+    E --> P[provider_pilot]
+    P --> N[provider_native]
+```
+
+The last three states require evidence from the named Provider. ABDS itself currently claims no Provider adoption.
