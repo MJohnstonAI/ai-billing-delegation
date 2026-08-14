@@ -2,7 +2,7 @@
 
 > Concise record of material changes between draft versions of the Artificial Intelligence Billing Delegation Standard.
 
-`SPEC.md` remains the v0.6 base specification. `SPEC_V0.7.md` is the normative v0.7 addendum. This file records version-to-version upgrades.
+`SPEC.md` remains the v0.6 base specification. `SPEC_V0.7.md` is the normative v0.7 technical addendum. v0.7.1 is a licensing, contribution-rights, and provenance hardening patch and does not change the technical protocol.
 
 ## Version Summary
 
@@ -14,11 +14,76 @@
 | v0.4 | Payer-neutral funding | Added Funding Principal, Economic Authorizer, Beneficiary, Sponsor funding, privacy, and no silent payer substitution |
 | v0.5 | Usage attribution and settlement | Added one event per physical attempt, separate Ledger Events, reservation, settlement, schemas, and examples |
 | v0.6 | Evidence, consent, and reconciliation | Added scoped ordering, evidence provenance, Consent Receipts, late-usage reconciliation, replay controls, and negative tests |
-| v0.7 | Provider adoption and entitlement binding | Separated app login from economic authorization, added Provider-authoritative entitlement resolution, entitlement types, adoption profile, maturity labels, and a prospective licensing framework |
+| v0.7 | Provider adoption and entitlement binding | Separated app login from economic authorization, added Provider-authoritative entitlement resolution, entitlement types, adoption profile, maturity labels, and an initial prospective licensing framework |
+| v0.7.1 | Licensing and provenance hardening | Replaced future Small-Business software permissions with Noncommercial terms, added provider-evaluation rights, commercial-intermediation clarity, contributor relicensing rights, provenance metadata, and stronger project-name controls |
+
+## v0.7.1 — Licensing & Provenance Hardening
+
+**Status:** Current legal/licensing patch. Technical protocol remains v0.7.
+
+### Problem addressed
+
+The initial v0.7 framework still left several avoidable commercial and chain-of-title risks:
+
+- PolyForm Small Business could permit a qualifying small commercial intermediary to exploit new ABDS software before exceeding the licence threshold;
+- commercial organizations needed a clear way to evaluate ABDS internally without receiving production rights;
+- the contribution process did not grant NeuroSync sufficiently explicit sublicensing and relicensing rights for accepted external contributions;
+- provenance existed in Git history but was not reinforced with a dedicated authorship record and machine-readable citation metadata; and
+- trademark/project-name policy needed clearer treatment of false origin, rebranding, domains, certification, and competing source identifiers.
+
+### Licensing changes
+
+For material first published under the v0.7.1 framework unless a file states otherwise:
+
+- specification/documentation remains **CC BY-NC-SA 4.0**;
+- new software and executable implementation materials use **PolyForm Noncommercial License 1.0.0** instead of PolyForm Small Business;
+- commercial production rights require a separate written agreement unless another applicable licence or law independently permits the activity; and
+- earlier rights already validly granted under historical licensing are not purportedly revoked.
+
+### Added legal and provenance documents
+
+- `PROVIDER_EVALUATION_LICENSE.md` — limited 180-day internal commercial-company evaluation permission without production or commercialization rights;
+- `CONTRIBUTOR_LICENSE_AGREEMENT.md` — contributor ownership retention plus broad sublicensing/relicensing rights for the Project Steward;
+- `AUTHORS.md` — originator, stewardship, and preferred-attribution record;
+- `CITATION.cff` — machine-readable citation metadata; and
+- `.github/pull_request_template.md` — contribution-rights and provider-claim checklist.
+
+### Strengthened documents
+
+- `LICENSE.md` — source-available dual-path framework, historical licensing record, no-implied-rights language, contribution-chain requirements, and Provider evaluation path;
+- `COMMERCIAL_USE.md` — examples of production use, commercial intermediation, brokering, white-label use, provider deals, and other activities requiring separate rights where protected ABDS material is used;
+- `NOTICE.md` — stronger copyright, authorship, provenance, chain-of-title, and historical-record notice;
+- `TRADEMARKS.md` — stronger false-origin, source-identifier, domain, product-name, certification, fork, and Provider-claim controls; and
+- `CONTRIBUTING.md` — substantive contributions require acceptance of the ABDS Contributor Licence Agreement unless another written arrangement applies.
+
+### Provider evaluation boundary
+
+The additional Provider Evaluation Licence permits internal review, testing, modification, and non-production proof-of-concept work solely to assess whether to pursue licensing, technical collaboration, investment, standards discussion, or a design partnership.
+
+It does not grant:
+
+- production deployment;
+- customer-facing use;
+- hosted-service rights;
+- resale, sublicensing, white-labelling, or brokering;
+- rights to present protected ABDS material as the Evaluator's proprietary technology;
+- trade mark or certification rights; or
+- ownership of ABDS intellectual property.
+
+### Contribution-chain boundary
+
+Substantive contributors retain ownership of their original contributions but grant the Project Steward sufficient copyright and limited patent rights to use, modify, sublicense, distribute, and relicense accepted contributions under public or commercial terms.
+
+Organization-owned contributions may require separate corporate authorization.
+
+### Compatibility
+
+- v0.7.1 does not modify `SPEC.md` or the technical requirements in `SPEC_V0.7.md`.
+- v0.7.1 does not change any schema identifier, entitlement type, Provider discovery field, accounting invariant, Consent Receipt requirement, evidence class, or Provider Adoption Profile requirement.
+- v0.7 remains the technical protocol version.
+- v0.7.1 is the current repository licensing/provenance framework.
 
 ## v0.7 — Provider Adoption & Entitlement Binding
-
-**Status:** Current draft.
 
 ### Problem addressed
 
@@ -35,7 +100,7 @@ v0.7 addresses those gaps without changing the v0.6 accounting core.
 
 - `SPEC_V0.7.md` — normative v0.7 addendum
 
-### New licensing and stewardship documents
+### Initial licensing and stewardship documents
 
 - `LICENSE.md`
 - `COMMERCIAL_USE.md`
@@ -88,8 +153,6 @@ abds_entitlement_selection_mode
 
 5. Added a lightweight **Provider Adoption Profile** for feasibility testing.
 
-The profile requires the core authorization, entitlement, grant, metering, usage-status, revocation, and no-silent-payer-substitution properties without forcing an experimental Provider implementation to build the entire Advanced evidence and settlement stack first.
-
 6. Added an informative adoption-status taxonomy:
 
 ```text
@@ -107,17 +170,17 @@ A project cannot self-assign Provider-specific evaluation, pilot, or native stat
 
 > A Client MUST NOT manufacture, substitute, upgrade, or silently select a Provider entitlement. Entitlement eligibility and selection remain Provider-authoritative.
 
-### Licensing change
+### Initial licensing position
 
-v0.7 introduces a prospective repository licensing framework:
+The first v0.7 release introduced a prospective repository licensing framework:
 
 - specification/documentation: CC BY-NC-SA 4.0 unless a file states otherwise;
 - software/executable implementation materials: PolyForm Small Business License 1.0.0 unless a file states otherwise;
 - broader commercial use: separate written agreement with NeuroSync AI Dynamics (Pty) Ltd;
-- historical versions: the new framework does not purport to revoke rights already validly granted for material previously described as MIT licensed;
+- historical versions: the framework did not purport to revoke rights already validly granted for material previously described as MIT licensed; and
 - project names and future certification marks: governed separately by `TRADEMARKS.md`.
 
-The repository should therefore be described as **source available**, not OSI-open-source as a whole.
+The software licensing position was subsequently tightened prospectively in v0.7.1.
 
 ### Compatibility
 
@@ -129,19 +192,6 @@ The repository should therefore be described as **source available**, not OSI-op
 - v0.7 support must be advertised explicitly through discovery.
 - v0.7 does not imply that an existing consumer AI subscription is delegable.
 - No Provider adoption or endorsement is claimed.
-
-### Migration guidance
-
-Implementers moving from v0.6 should:
-
-1. keep application login and ABDS economic authorization as separate security decisions;
-2. add an explicit Entitlement Resolution step before creating or materially changing a grant;
-3. distinguish funding-source relationship from entitlement type;
-4. make the Provider authoritative for entitlement eligibility and selection;
-5. prevent silent entitlement or payer substitution;
-6. advertise v0.7 entitlement capabilities through Provider discovery;
-7. use the Provider Adoption Profile for early feasibility work where a full Standard/Advanced implementation is premature; and
-8. describe Provider relationship status accurately using the v0.7 maturity taxonomy.
 
 ## v0.6 — Evidence, Consent, and Reconciliation
 
@@ -286,9 +336,10 @@ v0.5: Grant -> Token -> Provider Execution
 
 ## Change-Control Rules
 
-- `main` contains the current accepted draft after release changes are merged.
-- `SPEC.md` is the v0.6 base; `SPEC_V0.7.md` adds the current v0.7 normative delta.
-- Material accepted changes update this file and the applicable current specification document.
+- `main` contains the current accepted draft.
+- `SPEC.md` is the v0.6 base; `SPEC_V0.7.md` adds the current v0.7 technical delta.
+- v0.7.1 is a repository legal/licensing patch and does not change the technical protocol version.
+- Material accepted technical changes update this file and the applicable specification document.
 - Historical drafts are preserved through Git history and release tags where available, not silently rewritten.
 - Published schema identifiers are not silently repurposed.
 - Licensing changes are prospective unless a valid earlier licence expressly allows otherwise.
