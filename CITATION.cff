@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you reference ABDS, please cite the project and preserve applicable licence attribution."
+title: "Artificial Intelligence Billing Delegation Standard (ABDS)"
+type: software
+authors:
+  - family-names: Johnston
+    given-names: Marc
+    alias: MJohnstonAI
+repository-code: "https://github.com/MJohnstonAI/ai-billing-delegation"
+version: "0.7.1"
+date-released: "2026-08-14"
+license: "CC-BY-NC-SA-4.0"
+abstract: >-
+  ABDS is a draft OAuth-aligned profile for bounded, provider-enforced AI resource
+  funding, entitlement resolution, economic consent, execution accounting,
+  evidence, settlement, reconciliation, and revocation. Software and executable
+  implementation materials may be governed by a different licence as described
+  in LICENSE.md.
+keywords:
+  - AI billing
+  - delegated authorization
+  - OAuth
+  - AI infrastructure
+  - entitlement delegation
+  - provider accounting
