@@ -1,8 +1,8 @@
-# Contributing to ABDS v0.7
+# Contributing to ABDS v0.7.1
 
 ABDS is a public draft that needs implementation evidence, adversarial critique, and Provider review before it can credibly seek formal standards discussion.
 
-ABDS v0.7 is source available under the licensing framework in `LICENSE.md`; it is not presented as an OSI-open-source repository as a whole.
+ABDS v0.7.1 is source available under the licensing framework in `LICENSE.md`; it is not presented as an OSI-open-source repository as a whole.
 
 ## Read the Current Draft
 
@@ -21,8 +21,10 @@ ABDS v0.7 is source available under the licensing framework in `LICENSE.md`; it 
 13. `THREAT_MODEL.md`
 14. `LICENSE.md`
 15. `COMMERCIAL_USE.md`
-16. `NOTICE.md`
-17. `TRADEMARKS.md`
+16. `PROVIDER_EVALUATION_LICENSE.md`
+17. `CONTRIBUTOR_LICENSE_AGREEMENT.md`
+18. `NOTICE.md`
+19. `TRADEMARKS.md`
 
 Historical AI contributions and earlier commits are context, not current normative guidance.
 
@@ -42,7 +44,7 @@ Current priorities are deliberately narrow:
 - expand negative test vectors;
 - assess OAuth, abuse, privacy, accounting, Provider economics, and consumer-protection risks.
 
-ABDS Studio is deferred to v0.8 unless implementation resources justify earlier work.
+ABDS Studio is deferred unless implementation resources justify renewed work.
 
 ## Normative Change Requirements
 
@@ -64,29 +66,66 @@ Published schema identifiers must not be silently repurposed.
 
 Use fictional domains, identifiers, models, units, and Sponsors in normative examples unless a real implementation is being accurately documented.
 
-Do not imply that OpenAI, Google, OpenRouter, Anthropic, or another Provider supports, reviewed, endorsed, certified, piloted, or adopted ABDS unless that fact is supported by evidence from the Provider.
+Do not imply that OpenAI, Google, OpenRouter, Anthropic, or another Provider supports, reviewed, endorsed, certified, piloted, funded, partnered with, or adopted ABDS unless that fact is supported by evidence from the Provider.
 
 A gateway or sponsor-owned API account is not Provider-native ABDS.
 
 The v0.7 adoption-status labels in `SPEC_V0.7.md` must be used conservatively.
 
-## Contribution Licensing
+## Contribution Rights
 
-Before submitting substantial material, read `LICENSE.md`.
+ABDS preserves a clean chain of title and relicensing authority so accepted work can remain maintainable and can, where appropriate, be included in future commercial provider agreements.
 
-Unless a separate written agreement applies, an intentionally submitted contribution accepted into an ABDS v0.7-or-later file is expected to be contributed under the same licence applicable to that file so the combined work can be distributed consistently.
+Before submitting substantive material, read:
 
-By submitting a contribution, you represent that you have the right to submit it under the applicable terms.
+- `LICENSE.md`; and
+- `CONTRIBUTOR_LICENSE_AGREEMENT.md`.
 
-Opening an issue, discussion, or pull request does not by itself transfer ownership of unrelated intellectual property to NeuroSync AI Dynamics.
+For substantive pull requests, the contributor must include the following statement in the pull request:
 
-NeuroSync AI Dynamics may introduce a Contributor Licence Agreement or additional provenance requirements before accepting substantial implementation, standards, or commercial integration contributions.
+> I agree to the ABDS Contributor Licence Agreement v1.0 in `CONTRIBUTOR_LICENSE_AGREEMENT.md`, and I represent that I have authority to grant the rights described there.
+
+The contributor retains ownership of the contributor's original work, but grants the rights described in the Contributor Licence Agreement, including the Project Steward's ability to sublicense and relicense accepted contributions under public or commercial terms.
+
+A submission that does not include the required rights grant may be discussed or reviewed but should not be merged as a substantive ABDS contribution until rights are resolved.
+
+## Employer, provider, and corporate contributions
+
+A contributor submitting work created for an employer, AI Provider, university, client, or other organization must have authority to grant the required rights.
+
+For substantial organization-owned contributions, NeuroSync AI Dynamics may require a separately signed corporate confirmation or contributor agreement before merge.
+
+A personal GitHub account does not by itself prove that an employee owns employer-created intellectual property.
+
+## Small corrections
+
+Purely factual issue reports, bug reports, suggestions, or very small non-copyrightable corrections may be accepted without a separate signed contributor agreement where no meaningful intellectual-property rights are being contributed.
+
+The Project Steward decides whether a contribution requires additional rights documentation.
+
+## Confidential and commercial material
+
+Public repository submissions are not confidential.
+
+Do not submit:
+
+- trade secrets;
+- provider-confidential architecture;
+- confidential commercial terms;
+- credentials;
+- private user data;
+- employer or client material you are not authorized to disclose; or
+- information subject to an NDA.
+
+Confidential provider review or commercial collaboration should use a separate agreed channel and, where appropriate, a confidentiality agreement.
 
 ## AI-Assisted Contributions
 
 See `AI_CONTRIBUTIONS/README.md`.
 
 Contributors should identify material AI assistance where practical and retain human responsibility for the final submission, including rights, accuracy, security, and licensing.
+
+AI assistance does not relieve a contributor of the obligation to have authority to submit the final Contribution.
 
 ## Governance
 
