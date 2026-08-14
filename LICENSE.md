@@ -1,20 +1,23 @@
 # ABDS Licensing Framework
 
-Effective for ABDS v0.7 and later contributions first published under this framework.
+Effective for ABDS v0.7.1 and later material first published under this framework.
 
 Project: **Artificial Intelligence Billing Delegation Standard (ABDS)**  
 Project steward: **NeuroSync AI Dynamics (Pty) Ltd**  
 Originator: **Marc Johnston**  
 Location: Cape Town, South Africa
 
-This repository contains different categories of material. They are licensed differently so that ABDS can remain reviewable and useful to researchers and smaller builders while preserving NeuroSync AI Dynamics' ability to negotiate future commercial partnerships with larger organizations.
+This repository uses a **source-available, dual-path licensing model** designed to keep ABDS reviewable and technically testable while preserving future commercial licensing, provider-partnership, and standards-stewardship options.
+
+This file allocates repository material among standard public licences and additional permissions. The exact standard licence governing a file controls the rights actually granted by that licence.
 
 ## 1. Specification and Documentation Materials
 
-Unless a file says otherwise, ABDS v0.7-and-later specification and documentation materials are licensed under:
+Unless a file says otherwise, ABDS v0.7.1-and-later specification and documentation materials are licensed under:
 
 **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)**
 
+SPDX identifier: `CC-BY-NC-SA-4.0`  
 Canonical licence: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
 This category includes, unless a file states otherwise:
@@ -25,17 +28,19 @@ This category includes, unless a file states otherwise:
 - JSON schemas and non-executable interoperability examples whose primary purpose is specification or documentation; and
 - presentation material published in this repository.
 
-Under CC BY-NC-SA 4.0, qualifying non-commercial users may share and adapt the licensed material subject to attribution and ShareAlike requirements. Commercial use is not granted by this public licence.
+The public licence permits qualifying **non-commercial** sharing and adaptation subject to attribution and ShareAlike requirements. It does **not** grant commercial use.
 
-A separate commercial licence may be available from NeuroSync AI Dynamics (Pty) Ltd.
+The standard CC licence is irrevocable for recipients who comply with it. Nothing in this repository adds restrictions to rights that CC BY-NC-SA 4.0 itself grants.
+
+Commercial rights may be available only through a separate written agreement or another expressly applicable permission.
 
 ## 2. Software and Executable Implementation Materials
 
-Unless a file says otherwise, software first published as part of ABDS v0.7 or later is licensed under:
+Unless a file says otherwise, software and executable implementation material first published as part of ABDS v0.7.1 or later is licensed under:
 
-**PolyForm Small Business License 1.0.0**
+**PolyForm Noncommercial License 1.0.0**
 
-Canonical licence: https://polyformproject.org/licenses/small-business/1.0.0
+Canonical licence: https://polyformproject.org/licenses/noncommercial/1.0.0
 
 This category includes, unless a file states otherwise:
 
@@ -48,83 +53,134 @@ This category includes, unless a file states otherwise:
 - test harnesses and executable simulation code; and
 - other source code whose primary purpose is execution rather than specification.
 
-Required Notice: ABDS software — project steward NeuroSync AI Dynamics (Pty) Ltd; originated by Marc Johnston. https://github.com/MJohnstonAI/ai-billing-delegation
+Required Notice: ABDS software — Artificial Intelligence Billing Delegation Standard; originated by Marc Johnston; project steward NeuroSync AI Dynamics (Pty) Ltd; https://github.com/MJohnstonAI/ai-billing-delegation
 
-The PolyForm Small Business License determines who qualifies for its permitted small-business use and the applicable copyright and patent licence. Organizations outside that licence's permitted purpose require a separate written commercial licence unless another file-specific licence expressly applies.
+PolyForm Noncommercial permits use, modification, and distribution only for the purposes permitted by that licence. A commercial startup does **not** receive broader production rights merely because it is small.
 
-## 3. Commercial Licensing
+Commercial production, hosted service, resale, sublicensing, provider integration, white-label use, or other use outside the PolyForm Noncommercial permitted purposes requires separate written permission unless applicable law independently permits the activity.
 
-The public licences above do not grant broader commercial rights than their own terms provide.
+## 3. Provider and Commercial Evaluation
 
-Organizations that want to use ABDS materials commercially outside the applicable public licence are invited to negotiate directly with NeuroSync AI Dynamics (Pty) Ltd.
+Commercial organizations that wish to evaluate ABDS before negotiating a production agreement may rely on the separate additional permission in:
 
-Possible commercial arrangements may include, by mutual written agreement:
+[`PROVIDER_EVALUATION_LICENSE.md`](PROVIDER_EVALUATION_LICENSE.md)
 
-- commercial implementation licences;
+That evaluation permission is designed to allow internal technical, security, architecture, and proof-of-concept assessment for a limited period without granting production or commercialization rights.
+
+It does not replace rights independently available under CC BY-NC-SA 4.0, PolyForm Noncommercial 1.0.0, or applicable law.
+
+## 4. Commercial Licensing
+
+The public licences and evaluation permission do not grant broader commercial production rights than their terms provide.
+
+Organizations seeking commercial rights should negotiate directly with NeuroSync AI Dynamics (Pty) Ltd and, where necessary, the applicable copyright owner or other rights holder.
+
+Possible written arrangements may include:
+
 - provider design partnerships;
+- commercial implementation licences;
+- provider-native implementation licences;
 - paid integration or architecture work;
 - support and maintenance;
-- certification or conformance services if such a program is later established;
+- conformance or certification services if a formal program is established;
 - sponsorship;
-- revenue- or usage-linked arrangements;
-- strategic investment; or
-- other negotiated consideration.
+- revenue-, usage-, milestone-, or transaction-linked consideration;
+- strategic investment;
+- field-, territory-, product-, or time-limited exclusivity; or
+- another negotiated commercial arrangement.
 
-No royalty, revenue share, donation, endorsement, certification, or investment obligation is created merely by reading this repository. Any such obligation must arise from a separate written agreement.
+No royalty, revenue share, donation, certification, exclusivity, endorsement, investment, or other payment obligation arises merely from reading or discussing the public repository. Any such obligation must arise from a separate enforceable agreement.
 
 See `COMMERCIAL_USE.md`.
 
-## 4. Historical Licensing Notice
+## 5. Commercial Intermediation and Rebranding
 
-Earlier repository versions, including materials published through ABDS v0.6, were publicly described in repository metadata and README text as MIT licensed even though the repository did not consistently contain a root licence file.
+Nothing in the public licensing model should be read as giving a person or organization permission, beyond the rights actually granted by the applicable standard licence, to commercially present protected ABDS materials as its own proprietary technology, broker or license protected ABDS materials to a third party, or remove required attribution and provenance.
 
-This v0.7 licensing framework is prospective. It does not purport to revoke rights that were already validly granted for an earlier historical version under previously applicable terms.
+Whether a particular activity is permitted is determined by the applicable standard licence, any additional written permission, and applicable law. This section explains the project's commercial position; it does not modify the standard public licences.
+
+## 6. Historical Licensing Notice
+
+Earlier repository versions were publicly described under different licensing positions.
+
+### Through ABDS v0.6
+
+Materials published through ABDS v0.6 were publicly described in repository metadata and README text as MIT licensed, although the repository did not consistently contain a root MIT licence file.
+
+### ABDS v0.7 before this v0.7.1 hardening
+
+The initial v0.7 framework described software and executable implementation materials under the **PolyForm Small Business License 1.0.0**.
+
+This v0.7.1 framework is prospective. It does not purport to revoke rights already validly granted to a recipient under an earlier applicable licence.
 
 Accordingly:
 
-- v0.7-and-later new material and modifications are governed by this framework unless a file states otherwise;
-- historical copies may remain subject to rights validly granted when they were distributed; and
-- a party relying on historical licensing is responsible for identifying the exact historical material and terms on which it relies.
+- v0.7.1-and-later new material and modifications are governed by this framework unless a file states otherwise;
+- historical copies may remain subject to rights validly granted when they were distributed;
+- a party relying on historical licensing should identify the exact commit, file, version, and terms on which it relies; and
+- no statement here represents that a validly granted earlier licence can be retroactively withdrawn.
 
-Nothing in this repository should be read as a representation that a previously granted licence can be retroactively withdrawn.
+## 7. Copyright, Authorship, and Ownership
 
-## 5. Contributions
+Copyright protection and ownership are determined by applicable law, authorship, employment or commissioning arrangements, assignments, and contribution records.
 
-Contributors MUST identify themselves and MUST have the right to submit their contribution.
+The project records **Marc Johnston** as the originator of ABDS and **NeuroSync AI Dynamics (Pty) Ltd** as current project steward.
 
-Unless a contribution is accepted under a separate written agreement, contributions intentionally submitted for inclusion in an ABDS v0.7-or-later file are understood to be offered under the same licence applicable to that file so that the repository can distribute the combined work consistently.
+Nothing in this file should be read as silently assigning copyright from one rights holder to another. Where ownership or exclusive licensing is transferred, the project should preserve a written chain-of-title record outside or inside the repository as appropriate.
 
-This repository does not require contributors to transfer ownership of their independent copyright merely by opening an issue or pull request.
+Copyright and authorship notices must not be removed or falsified except as permitted by the applicable licence or law.
 
-NeuroSync AI Dynamics may require a contributor licence agreement or other provenance mechanism in the future before accepting substantial implementation or standards contributions.
+See `NOTICE.md` and `AUTHORS.md`.
 
-## 6. Project Names, Marks, Certification, and Endorsement
+## 8. Contributions and Relicensing Rights
 
-Copyright and software licences do not grant permission to claim that an implementation is official, certified, endorsed, approved, or Provider-adopted.
+ABDS must preserve a clean contribution chain so the project can continue to publish, maintain, and—where agreed—commercially license accepted contributions.
 
-The names **ABDS** and **Artificial Intelligence Billing Delegation Standard**, associated logos, and future certification marks are governed separately by `TRADEMARKS.md`.
+Substantial contributions will not be accepted merely on an informal assumption that the outbound repository licence is sufficient.
 
-Descriptive references to the project are permitted to the extent allowed by law and the trademark policy, but must not imply sponsorship, certification, endorsement, or Provider adoption that has not actually occurred.
+Contributors must comply with `CONTRIBUTING.md` and, where required, accept the rights grant in `CONTRIBUTOR_LICENSE_AGREEMENT.md` or another written contributor agreement approved by NeuroSync AI Dynamics.
 
-## 7. No Provider Adoption Claim
+The contributor agreement is designed so contributors retain ownership of their original contributions while granting sufficient rights for ABDS to use, modify, distribute, sublicense, and relicense accepted contributions, including in commercial licences.
 
-Publishing or implementing ABDS does not mean that Google, OpenAI, Anthropic, OpenRouter, or any other AI Provider has reviewed, adopted, endorsed, certified, or agreed to implement the proposal.
+## 9. Project Names, Marks, Certification, and Endorsement
+
+The copyright and software licences do not grant permission to use **ABDS**, **Artificial Intelligence Billing Delegation Standard**, associated logos, NeuroSync branding, or future certification marks as a trade mark, company name, product name, domain, certification mark, or source identifier in a way that implies ownership, official status, affiliation, sponsorship, or endorsement.
+
+Descriptive and nominative references remain subject to applicable law and the policy in `TRADEMARKS.md`.
+
+## 10. No Provider Adoption Claim
+
+Publishing, evaluating, discussing, or implementing ABDS does not mean that Google, OpenAI, Anthropic, OpenRouter, or any other AI Provider has reviewed, adopted, endorsed, certified, funded, partnered with, or agreed to implement ABDS.
 
 Any Provider relationship must be described accurately and supported by evidence from that Provider.
 
-## 8. No Warranty
+## 11. No Implied Rights
 
-ABDS is a draft technical proposal. To the maximum extent permitted by applicable law, materials are provided without warranties or guarantees beyond those, if any, contained in the applicable underlying licence.
+Except for rights expressly granted by an applicable licence or required by law, no permission is granted by implication, estoppel, course of dealing, repository access, technical discussion, issue participation, pull request, meeting, demonstration, or feedback exchange.
 
-Implementers remain responsible for security, financial, regulatory, privacy, identity, billing, tax, consumer-protection, and contractual compliance in their own jurisdictions and systems.
+In particular, no implied production licence, commercial licence, exclusivity, certification, endorsement, trade mark licence, ownership transfer, or standards-control right is created.
 
-## 9. Licence Precedence
+## 12. No Warranty
 
-For material governed by CC BY-NC-SA 4.0 or PolyForm Small Business 1.0.0, the terms of the applicable standard licence control the rights actually granted.
+ABDS is a draft technical proposal. To the maximum extent permitted by applicable law, materials are provided without warranties or guarantees beyond those, if any, contained in the applicable underlying licence or a separate signed agreement.
 
-This `LICENSE.md` file allocates repository material between those licences, records stewardship and historical context, and explains how commercial permission can be requested. It is not intended to add restrictions that contradict rights expressly granted by the applicable standard licence.
+Implementers remain responsible for security, financial, regulatory, privacy, identity, billing, tax, consumer-protection, competition, and contractual compliance in their own jurisdictions and systems.
 
-## 10. Contact
+## 13. Licence Precedence
+
+For material governed by CC BY-NC-SA 4.0 or PolyForm Noncommercial 1.0.0, the terms of the applicable standard licence control the rights actually granted.
+
+This `LICENSE.md` file:
+
+- identifies which categories of repository material use which public licences;
+- records the prospective v0.7.1 licensing position;
+- preserves historical licensing context;
+- identifies additional evaluation and commercial paths; and
+- records project stewardship and rights-management principles.
+
+It is not intended to contradict or add restrictions to rights expressly granted by a standard public licence.
+
+## 14. Contact
 
 Commercial licensing, provider design partnerships, sponsorship, implementation support, and strategic collaboration:
 
@@ -134,4 +190,4 @@ Project repository: https://github.com/MJohnstonAI/ai-billing-delegation
 
 ---
 
-This licensing framework is intended to clarify repository permissions and preserve future commercial optionality. It is not a substitute for jurisdiction-specific legal advice.
+This framework is intended to preserve future commercial optionality and a clean rights chain while keeping ABDS available for legitimate review and non-commercial research. It is not a substitute for a negotiated agreement where production or commercial rights are required.
