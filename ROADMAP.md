@@ -5,27 +5,32 @@
 ## Stable Core Thesis
 
 ```text
-Funding Entitlement or Budget
-    -> Consent Receipt
-        -> Delegated AI Grant
-            -> Short-lived Execution Token
-                -> Provider Execution
-                    |-> Usage Event Plane
-                    |-> Economic Ledger Plane
-                -> Evidence and Reconciliation
+Provider Account
+    -> Eligible Funding Entitlement
+        -> Economic Consent
+            -> Consent Receipt
+                -> Delegated AI Grant
+                    -> Short-lived Execution Token
+                        -> Provider Execution
+                            |-> Usage Event Plane
+                            |-> Economic Ledger Plane
+                        -> Evidence and Reconciliation
 ```
 
 Stable rules:
 
-1. Mutable economic state does not belong in bearer-token claims.
-2. Provider grant, reservation, measurement, settlement, and ledger state remain authoritative.
-3. Funding does not imply access to user content or identity.
-4. A failed funding source cannot silently shift cost.
-5. One physical Provider attempt is attributable separately from the logical request.
-6. High-volume traffic remains attributable to both Beneficiary and Client.
-7. Accepted events and receipts are append-only.
-8. Gateway observations are not Provider-authoritative until reconciled.
-9. Corrections use compensating events rather than historical rewrite.
+1. Application Authentication does not imply Economic Authorization.
+2. Entitlement eligibility and selection remain Provider-authoritative.
+3. Mutable economic state does not belong in bearer-token claims.
+4. Provider grant, reservation, measurement, settlement, and ledger state remain authoritative.
+5. Funding does not imply access to user content or identity.
+6. A failed funding source cannot silently shift cost to another payer or entitlement.
+7. One physical Provider attempt is attributable separately from the logical request where the applicable profile requires attempt-level accounting.
+8. High-volume traffic remains attributable to both Beneficiary and Client.
+9. Accepted events and receipts are append-only.
+10. Gateway observations are not Provider-authoritative until reconciled.
+11. Corrections use compensating events rather than historical rewrite.
+12. Provider capability discovery does not expose user-specific balance or entitlement data.
 
 ## Version History
 
@@ -59,11 +64,9 @@ Established:
 
 ### v0.6 — Evidence, Consent, and Reconciliation
 
-**Status: current draft.**
-
 Established:
 
-- standalone Usage Event interoperability guide;
+- standalone Usage Event interoperability guidance;
 - scoped sequence ordering;
 - `provider_signed`, `provider_reported`, and `gateway_attested` evidence classes;
 - separate estimated, gateway-observed, Provider-reported, and Provider-final measurements;
@@ -78,16 +81,37 @@ Established:
 - positive and negative test fixtures;
 - extended automated validation.
 
+### v0.7 — Provider Adoption & Entitlement Binding
+
+**Status: current draft.**
+
+Established:
+
+- explicit separation of Application Authentication from ABDS Economic Authorization;
+- Provider Account and Eligible Funding Entitlement concepts;
+- Provider-authoritative Entitlement Resolution;
+- `entitlement_type` as a separate dimension from `funding_source_type`;
+- illustrative entitlement categories including prepaid credit, pay-as-you-go, subscription allowance, delegated subscription add-on, organization pool, Sponsor pool, promotional credit, and developer balance;
+- discovery metadata for entitlement capabilities;
+- a lightweight Provider Adoption Profile for experimental implementation;
+- adoption maturity labels from conceptual through Provider-native;
+- a normative rule prohibiting Clients from manufacturing, substituting, upgrading, or silently selecting Provider entitlements;
+- a prospective source-available licensing framework for v0.7-and-later material;
+- commercial-use, provenance, and project-name/endorsement policies.
+
+v0.7 deliberately does **not** build the previously planned ABDS Studio. The Studio is moved to v0.8 so that the current release remains a small, reviewable standards clarification rather than reopening a large implementation project.
+
 ## Future Milestones
 
-### v0.7 — ABDS Studio Reference Simulator
+### v0.8 — ABDS Studio Reference Simulator
 
-Goal: turn the proposal into a runnable and reviewable developer tool.
+Goal: turn the proposal into a runnable and reviewable developer tool if project resources justify renewed implementation work.
 
 Planned:
 
 - mock Authorization Server and Resource Server;
-- Sponsor, user, Client, and Provider consoles;
+- user, Client, Sponsor, and Provider views;
+- Entitlement Resolution demonstration;
 - Consent Receipt issuance;
 - grant and short-lived token lifecycle;
 - run-level reservation;
@@ -95,14 +119,14 @@ Planned:
 - gateway-attested and Provider-signed evidence;
 - reconciliation and adjustment demonstration;
 - revocation, exhaustion, retry, fallback, and replay tests;
-- NatureGuard reference scenario;
+- a consumer-app reference scenario;
 - machine-readable conformance report.
 
-### v0.8 — Provider Adapter and Interoperability Evidence
+### v0.9 — Provider Adapter and Interoperability Evidence
 
 Planned:
 
-- gateway adapter for an existing AI API;
+- gateway adapter for an existing AI API without claiming Provider-native adoption;
 - Provider-reported usage reconciliation;
 - two independent prototype implementations;
 - cross-client test vectors;
@@ -111,7 +135,7 @@ Planned:
 - incompatibility report;
 - revised conformance checklist.
 
-### v0.9 — Governance and External Review
+### v0.10 — Governance and External Review
 
 Planned:
 
@@ -121,7 +145,9 @@ Planned:
 - production signature and key-discovery profile;
 - normative versus informative separation;
 - external OAuth, accounting, security, privacy, and Provider-platform review;
-- multi-maintainer governance proposal.
+- contributor provenance / CLA decision;
+- multi-maintainer governance proposal;
+- commercial licensing and certification governance review.
 
 ### v1.0 — Candidate Standards Discussion
 
@@ -131,25 +157,32 @@ ABDS must not claim standards-body status or Provider adoption before those fact
 
 ## Near-Term Priorities
 
-1. Obtain review of the v0.6 evidence hierarchy and Consent Receipt core.
-2. Select a production asymmetric signature and canonicalization profile.
-3. Build ABDS Studio as a mock provider-native implementation.
-4. Add one real gateway adapter without claiming provider-native adoption.
-5. Define invoice-level aggregate reconciliation.
-6. Obtain Provider, OAuth, accounting, security, privacy, and nonprofit-funding review.
-7. Replace placeholder identifiers with collision-resistant or registered identifiers.
+ABDS is currently suitable for low-maintenance stewardship. If work resumes, prioritize:
+
+1. obtain Provider feedback on Entitlement Resolution and the Provider Adoption Profile;
+2. validate whether entitlement categories are sufficiently provider-neutral;
+3. select a production asymmetric signature and canonicalization profile;
+4. build only the smallest useful ABDS Studio simulation;
+5. add one real gateway adapter without claiming provider-native adoption;
+6. define invoice-level aggregate reconciliation;
+7. obtain OAuth, accounting, security, privacy, Provider-platform, and commercial-model review;
+8. replace placeholder identifiers with collision-resistant or registered identifiers where standards work becomes realistic.
 
 ## Known Non-Goals Before v1.0
 
 - universal AI currency;
+- forced use of existing consumer subscriptions;
 - cross-provider transfer of resource units;
 - mandatory Provider pricing;
 - blockchain settlement;
 - mandated subscription allocation percentages;
 - Sponsor access to user content;
-- marketplace revenue sharing;
-- complete enterprise procurement workflows.
+- mandatory marketplace revenue sharing;
+- complete enterprise procurement workflows;
+- claims that a named Provider has adopted ABDS without Provider evidence.
 
 ## Next Review Milestone
 
-> A runnable ABDS Studio demonstrates a Consent Receipt, bounded grant, short-lived token, run-level reservation, several physical attempts, gateway and Provider evidence, append-only reconciliation, one idempotent settlement, revocation, and no silent payer substitution.
+> A credible next milestone is not another large specification expansion. It is evidence from at least one Provider or router that the v0.7 Entitlement Resolution boundary and Provider Adoption Profile are technically and commercially worth piloting.
+
+If that evidence exists, v0.8 should demonstrate a bounded consent-to-entitlement-to-grant flow before broader implementation work resumes.
